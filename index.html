@@ -111,19 +111,19 @@
 
     <label>اسم المجموعة العليا:</label>
     <input type="text" id="topName" value="فوق">
-    <input type="color" id="topColor" value="#e74c3c"> <!-- أحمر -->
+    <input type="color" id="topColor" value="#e74c3c">
 
     <label>اسم المجموعة السفلى:</label>
     <input type="text" id="bottomName" value="تحت">
-    <input type="color" id="bottomColor" value="#3498db"> <!-- أزرق -->
+    <input type="color" id="bottomColor" value="#3498db">
 
     <label>اسم المجموعة اليمنى:</label>
     <input type="text" id="rightName" value="يمين">
-    <input type="color" id="rightColor" value="#f39c12"> <!-- برتقالي -->
+    <input type="color" id="rightColor" value="#f39c12">
 
     <label>اسم المجموعة اليسرى:</label>
     <input type="text" id="leftName" value="يسار">
-    <input type="color" id="leftColor" value="#2ecc71"> <!-- أخضر -->
+    <input type="color" id="leftColor" value="#2ecc71">
 
     <button id="startBtn" onclick="startGame()">ابدأ اللعبة</button>
   </div>
@@ -168,12 +168,17 @@
     const mainLogo = document.getElementById('mainLogo');
 
     const defaultColor = '#3498db';
+    const letters = "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ";
 
     gridSteps.addEventListener('input', () => {
       const size = 2 * parseInt(gridSteps.value) + 1;
       gridSizeDisplay.textContent = size;
       gridSizeDisplay2.textContent = size;
     });
+
+    function getRandomLetter() {
+      return letters[Math.floor(Math.random() * letters.length)];
+    }
 
     function startGame() {
       const steps = parseInt(gridSteps.value);
@@ -215,18 +220,14 @@
       leftGroupName.style.height = totalSize + 'px';
       rightGroupName.style.height = totalSize + 'px';
 
-      const letters = "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ";
-      let index = 0;
-
       for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
           const button = document.createElement('button');
           button.className = 'square';
           let clickCount = 0;
 
-          const letter = letters[index % letters.length];
+          const letter = getRandomLetter();
           const originalLetter = letter;
-          index++;
 
           if (row === center && col === center) {
             button.style.width = '60px';
