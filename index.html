@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>جزيرة الحروف</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e0f7e9;
+      text-align: center;
+      padding: 30px;
+    }
+    .hidden { display: none; }
+    #setup {
+      background-color: white;
+      padding: 30px;
+      border-radius: 20px;
+      width: 500px;
+      margin: 30px auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      text-align: right;
+      border: 2px solid #c8e6c9;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="color"], input[type="file"] {
+      margin: 5px 0;
+      padding: 6px;
+      font-size: 16px;
+      width: 100%;
+    }
+    #startBtn {
+      position: relative;
+      background-color: green;
+      color: white;
+      border: none;
+      width: 130px;
+      height: 75px;
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin: 30px auto 0;
+      display: block;
+    }
+    .grid-container {
+      display: grid;
+      gap: 4px;
+      margin: 20px auto;
+      width: fit-content;
+      justify-items: center;
+      align-items: center;
+    }
+    .square {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      border: none;
+      color: white;
+      background-color: #3498db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .info {
+      margin-top: 20px;
+    }
+    .info img {
+      max-height: 150px;
+    }
+    .group-label {
+      font-size: 18px;
+      font-weight: bold;
+      color: black;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+      border-radius: 8px;
+    }
+    #topGroupName {
+      height: 20px;
+      border-bottom: 10px solid transparent;
+    }
+    #bottomGroupName {
+      height: 20px;
+      border-top: 10px solid transparent;
+    }
+    #leftGroupName, #rightGroupName {
+      width: 20px;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+    }
+  </style>
+</head>
+<body>
+  <div id="setup">
+    <h1 style="text-align:center; color:#2c3e50; margin-bottom: 10px;">جزيرة الحروف</h1>
+    <h2>إعداد اللعبة</h2>
+    <label>عدد الخطوات (شبكة فردية):</label>
+    <input type="range" id="gridSteps" min="0" max="10" step="1" value="1">
+    <p>الحجم: <span id="gridSizeDisplay">3</span> × <span id="gridSizeDisplay2">3</span></p>
+
+    <label>ارفع صورة للمربع الوسيط فقط:</label>
+    <input type="file" id="centerImageFile" accept="image/*">
+
+    <label>اسم المجموعة العليا:</label>
+    <input type="text" id="topName" value="فوق">
+    <input type="color" id="topColor" value="#e74c3c"> <!-- أحمر -->
+
+    <label>اسم المجموعة السفلى:</label>
+    <input type="text" id="bottomName" value="تحت">
+    <input type="color" id="bottomColor" value="#3498db"> <!-- أزرق -->
+
+    <label>اسم المجموعة اليمنى:</label>
+    <input type="text" id="rightName" value="يمين">
+    <input type="color" id="rightColor" value="#f39c12"> <!-- برتقالي -->
+
+    <label>اسم المجموعة اليسرى:</label>
+    <input type="text" id="leftName" value="يسار">
+    <input type="color" id="leftColor" value="#2ecc71"> <!-- أخضر -->
+
+    <button id="startBtn" onclick="startGame()">ابدأ اللعبة</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <div class="info">
+      <img id="mainLogo" src="logo.png" alt="شعار">
+    </div>
+    <div id="board-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+      <div id="topGroupName" class="group-label">--</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div id="leftGroupName" class="group-label">--</div>
+        <div id="grid" class="grid-container"></div>
+        <div id="rightGroupName" class="group-label">--</div>
+      </div>
+      <div id="bottomGroupName" class="group-label">--</div>
+    </div>
+  </div>
+
+  <script>
+    const gridSteps = document.getElementById('gridSteps');
+    const gridSizeDisplay = document.getElementById('gridSizeDisplay');
+    const gridSizeDisplay2 = document.getElementById('gridSizeDisplay2');
+    const gridContainer = document.getElementById('grid');
+
+    const topName = document.getElementById('topName');
+    const bottomName = document.getElementById('bottomName');
+    const rightName = document.getElementById('rightName');
+    const leftName = document.getElementById('leftName');
+
+    const topColor = document.getElementById('topColor');
+    const bottomColor = document.getElementById('bottomColor');
+    const rightColor = document.getElementById('rightColor');
+    const leftColor = document.getElementById('leftColor');
+
+    const centerImageInput = document.getElementById('centerImageFile');
+
+    const topGroupName = document.getElementById('topGroupName');
+    const bottomGroupName = document.getElementById('bottomGroupName');
+    const rightGroupName = document.getElementById('rightGroupName');
+    const leftGroupName = document.getElementById('leftGroupName');
+    const mainLogo = document.getElementById('mainLogo');
+
+    const defaultColor = '#3498db';
+
+    gridSteps.addEventListener('input', () => {
+      const size = 2 * parseInt(gridSteps.value) + 1;
+      gridSizeDisplay.textContent = size;
+      gridSizeDisplay2.textContent = size;
+    });
+
+    function startGame() {
+      const steps = parseInt(gridSteps.value);
+      const size = 2 * steps + 1;
+      const center = Math.floor(size / 2);
+      const file = centerImageInput.files[0];
+
+      document.getElementById('setup').classList.add('hidden');
+      document.getElementById('game').classList.remove('hidden');
+
+      const logoBaseSize = 100;
+      const extraSizePerStep = 10;
+      const logoSize = logoBaseSize + steps * extraSizePerStep;
+      mainLogo.style.width = logoSize + 'px';
+      mainLogo.style.height = 'auto';
+
+      gridContainer.innerHTML = '';
+      gridContainer.style.gridTemplateColumns = `repeat(${size}, auto)`;
+
+      topGroupName.textContent = topName.value;
+      bottomGroupName.textContent = bottomName.value;
+      leftGroupName.textContent = leftName.value;
+      rightGroupName.textContent = rightName.value;
+
+      topGroupName.style.borderBottomColor = topColor.value;
+      bottomGroupName.style.borderTopColor = bottomColor.value;
+      leftGroupName.style.borderLeftColor = leftColor.value;
+      rightGroupName.style.borderRightColor = rightColor.value;
+
+      topGroupName.style.color = topColor.value;
+      bottomGroupName.style.color = bottomColor.value;
+      leftGroupName.style.color = leftColor.value;
+      rightGroupName.style.color = rightColor.value;
+
+      const squareSize = 40;
+      const totalSize = size * (squareSize + 4);
+      topGroupName.style.width = totalSize + 'px';
+      bottomGroupName.style.width = totalSize + 'px';
+      leftGroupName.style.height = totalSize + 'px';
+      rightGroupName.style.height = totalSize + 'px';
+
+      const letters = "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ";
+      let index = 0;
+
+      for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+          const button = document.createElement('button');
+          button.className = 'square';
+          let clickCount = 0;
+
+          const letter = letters[index % letters.length];
+          const originalLetter = letter;
+          index++;
+
+          if (row === center && col === center) {
+            button.style.width = '60px';
+            button.style.height = '60px';
+            button.style.backgroundColor = '#e0f7e9';
+            button.style.border = '2px solid black';
+            if (file) {
+              const img = document.createElement('img');
+              img.src = URL.createObjectURL(file);
+              img.alt = 'مربع المركز';
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.objectFit = 'cover';
+              img.style.borderRadius = '8px';
+              button.innerHTML = '';
+              button.appendChild(img);
+              button.disabled = true;
+            } else {
+              button.textContent = '';
+            }
+            gridContainer.appendChild(button);
+            continue;
+          }
+
+          button.style.backgroundColor = defaultColor;
+          button.textContent = letter;
+
+          button.addEventListener('click', () => {
+            clickCount = (clickCount + 1) % 6;
+            let color = defaultColor;
+            if (clickCount === 1) color = 'orange';
+            else if (clickCount === 2) color = topColor.value;
+            else if (clickCount === 3) color = bottomColor.value;
+            else if (clickCount === 4) color = rightColor.value;
+            else if (clickCount === 5) color = leftColor.value;
+            button.style.backgroundColor = color;
+            if (clickCount >= 2 && clickCount <= 5) button.textContent = '';
+            else if (clickCount === 0) button.textContent = originalLetter;
+          });
+
+          gridContainer.appendChild(button);
+        }
+      }
+    }
+
+    gridSteps.dispatchEvent(new Event('input'));
+  </script>
+</body>
+</html>
