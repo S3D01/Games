@@ -26,7 +26,7 @@
       margin-top: 15px;
       font-weight: bold;
     }
-    input[type="text"], input[type="color"], input[type="file"] {
+    input[type="text"], input[type="color"] {
       margin: 5px 0;
       padding: 6px;
       font-size: 16px;
@@ -64,7 +64,18 @@
       background-color: #3498db;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .square img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      border-radius: 8px;
     }
     .info {
       margin-top: 20px;
@@ -105,9 +116,6 @@
     <label>عدد الخطوات (شبكة فردية):</label>
     <input type="range" id="gridSteps" min="0" max="10" step="1" value="1">
     <p>الحجم: <span id="gridSizeDisplay">3</span> × <span id="gridSizeDisplay2">3</span></p>
-
-    <label>ارفع صورة للمربع الوسيط فقط:</label>
-    <input type="file" id="centerImageFile" accept="image/*">
 
     <label>اسم المجموعة العليا:</label>
     <input type="text" id="topName" value="فوق">
@@ -159,8 +167,6 @@
     const rightColor = document.getElementById('rightColor');
     const leftColor = document.getElementById('leftColor');
 
-    const centerImageInput = document.getElementById('centerImageFile');
-
     const topGroupName = document.getElementById('topGroupName');
     const bottomGroupName = document.getElementById('bottomGroupName');
     const rightGroupName = document.getElementById('rightGroupName');
@@ -184,19 +190,15 @@
       const steps = parseInt(gridSteps.value);
       const size = 2 * steps + 1;
       const center = Math.floor(size / 2);
-      const file = centerImageInput.files[0];
 
       document.getElementById('setup').classList.add('hidden');
       document.getElementById('game').classList.remove('hidden');
 
-      const logoBaseSize = 100;
-      const extraSizePerStep = 10;
-      const logoSize = logoBaseSize + steps * extraSizePerStep;
+      const logoSize = 100 + steps * 10;
       mainLogo.style.width = logoSize + 'px';
-      mainLogo.style.height = 'auto';
 
       gridContainer.innerHTML = '';
-      gridContainer.style.gridTemplateColumns = `repeat(${size}, auto)`;
+      gridContainer.style.gridTemplateColumns = `repeat(${size}, 40px)`;
 
       topGroupName.textContent = topName.value;
       bottomGroupName.textContent = bottomName.value;
@@ -213,8 +215,7 @@
       leftGroupName.style.color = leftColor.value;
       rightGroupName.style.color = rightColor.value;
 
-      const squareSize = 40;
-      const totalSize = size * (squareSize + 4);
+      const totalSize = size * 44;
       topGroupName.style.width = totalSize + 'px';
       bottomGroupName.style.width = totalSize + 'px';
       leftGroupName.style.height = totalSize + 'px';
@@ -230,30 +231,25 @@
           const originalLetter = letter;
 
           if (row === center && col === center) {
-            button.style.width = '60px';
-            button.style.height = '60px';
+            const scale = 1 + steps * 0.05;
+            button.style.transform = `scale(${scale})`;
+            button.style.zIndex = '1';
             button.style.backgroundColor = '#e0f7e9';
             button.style.border = '2px solid black';
-            if (file) {
-              const img = document.createElement('img');
-              img.src = URL.createObjectURL(file);
-              img.alt = 'مربع المركز';
-              img.style.width = '100%';
-              img.style.height = '100%';
-              img.style.objectFit = 'cover';
-              img.style.borderRadius = '8px';
-              button.innerHTML = '';
-              button.appendChild(img);
-              button.disabled = true;
-            } else {
-              button.textContent = '';
-            }
+
+            const img = document.createElement('img');
+            img.src = 'island.png';
+            img.alt = 'مربع المركز';
+            button.innerHTML = '';
+            button.appendChild(img);
+            button.disabled = true;
+
             gridContainer.appendChild(button);
             continue;
           }
 
-          button.style.backgroundColor = defaultColor;
           button.textContent = letter;
+          button.style.backgroundColor = defaultColor;
 
           button.addEventListener('click', () => {
             clickCount = (clickCount + 1) % 6;
