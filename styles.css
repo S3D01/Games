@@ -1,0 +1,88 @@
+body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+#setup, #game {
+    padding: 20px;
+}
+
+#teams-list {
+    margin-bottom: 20px;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    justify-items: center;
+    margin-bottom: 20px;
+}
+
+.square {
+    width: 230px;
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #000;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+button {
+    margin: 10px;
+    padding: 15px 30px;
+    font-size: 20px;
+}
+
+#battle-notice {
+    font-size: 2.5rem;
+    color: #000;
+}
+@keyframes flash {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.flash-effect {
+    animation: flash 1s infinite;
+}
+.score-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.score-table th, .score-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.score-table th {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+.score-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.score-table tr:hover {
+    background-color: #ddd;
+}
+/* تأثير الوميض */
+@keyframes flash {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.flashing {
+    animation: flash 1s infinite;
+}
