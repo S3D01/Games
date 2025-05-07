@@ -1,18 +1,69 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
+<html lang="ar" dir="rtl"><head>
     <meta charset="UTF-8">
-    <title>قائمة الألعاب</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة نزال الثقافية </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div class="container text-center mt-5">
-        <h1 class="mb-4">اختر لعبة لتبدأ</h1>
-        <button onclick="location.href='square/index.html'" class="btn btn-primary btn-lg m-2">لعبة نزال</button>
-        <button onclick="location.href='WordsIsland/index.html'" class="btn btn-success btn-lg m-2"> 🏝️جزيرة الحروف🏝️  </button>
-        <button onclick="location.href='CodeNames/index.html'" class="btn btn-warning btn-lg m-2">كود نيمز
-        </button>
+<body cz-shortcut-listen="true">
+    <div class="container">
+        <!-- قسم الشرح -->
+        <div id="intro" class="my-5">
+            <h1 class="text-center mb-4 mt-4">شرح فكرة لعبة نـــزال</h1>
+            <p class="text-center alert alert-primary" style="font-size: 30px;">عبارة عن مسابقة ثقافية لعدد من الفرق ، لكل فريق عدد متساوي من المربعات وهناك عدد من جولات النزال بين الفرق ، يقوم مقدم المسابقة بطرح سؤال لطرفي النزال في حال اجاب طرف بالجواب الصحيح يفوز بالنزال و يستحل مربع الطرف المهزوم وهكذا<br> في نهاية المسابقة يفوز الفريق الأكثر احتلالا للمربعات  </p>
+            <div class="d-flex justify-content-center">
+                <button id="next-button" class="btn btn-primary btn-lg">الانتقال للمسابقة</button>
+                <div class="text-center mt-4">
+</div>
+
+            </div>
+            <div class="text-center mt-4">
+                <button onclick="location.href='../index.html'" class="btn btn-secondary btn-lg">العودة إلى القائمة الرئيسية</button>
+            </div>
+        </div>
+        <!-- قسم إعداد الفرق -->
+        <div id="setup" class="my-5" style="display: none;">
+            <h1 class="text-center mb-4">إعداد الفرق</h1>
+            <form id="team-form" class="mb-4">
+                <div class="mb-3">
+                    <label for="team-name" class="form-label">اسم الفريق</label>
+                    <input type="text" class="form-control form-control-lg" id="team-name" required="">
+                </div>
+                <div class="mb-3">
+                    <label for="team-color" class="form-label">لون الفريق</label>
+                    <input type="color" class="form-control form-control-lg" id="team-color" value="#000000" required="" pattern="^#[0-9A-Fa-f]{6}$">
+                </div>
+                <div class="mb-3">
+                    <label for="team-members" class="form-label">أسماء الأعضاء (استخدم الشرطة للفصل بين الأسماء)</label>
+                    <input type="text" class="form-control form-control-lg" id="team-members" required="">
+                </div>
+                <button type="button" id="add-team" class="btn btn-primary btn-lg">إضافة فريق</button>
+            </form>
+            <div id="teams-list" class="mb-4">
+                <!-- هنا سيتم عرض الفرق المضافة -->
+            </div>
+            <div class="d-flex justify-content-center">
+                <button id="start-game" class="btn btn-success btn-lg">بدء اللعبة</button>
+            </div>
+        </div>
+
+        <div id="game" class="my-5" style="display: none;">
+            <h1 class="text-center mb-4">لوحة النزال</h1>
+            <div id="battle-notice" class="mb-4"></div>
+            <span style="display: none;" id="notice">اضغط على مربع الفريق الفائز بالنزال</span>
+           
+            <div id="board" class="d-flex flex-wrap justify-content-center mb-4"></div>
+            <div class="d-flex justify-content-center">
+                <button id="start-battle" class="btn btn-warning btn-lg mx-2">بدء نزال جديد</button>
+                <button id="end-game" class="btn btn-danger btn-lg mx-2">انتهاء المسابقة</button>
+            </div>
+            <div id="result" class="mt-4 text-center"></div>
+        </div>
     </div>
-    
-</body>
-</html>
+
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body></html>
