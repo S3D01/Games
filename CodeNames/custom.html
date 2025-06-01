@@ -12,11 +12,9 @@
       color: white;
       direction: rtl;
     }
-
     h1, h2 {
       margin-bottom: 20px;
     }
-
     .description-box {
       background-color: rgba(255, 255, 255, 0.1);
       border-radius: 12px;
@@ -26,7 +24,6 @@
       font-size: 18px;
       line-height: 1.6;
     }
-
     button {
       font-size: 18px;
       padding: 12px 25px;
@@ -36,10 +33,8 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     #shuffleBtn { background-color: #ffc107; color: black; }
     #startGameBtn { background-color: #28a745; color: white; }
-
     textarea {
       width: 150px;
       height: 200px;
@@ -54,7 +49,6 @@
       white-space: pre-wrap;
       overflow-y: auto;
     }
-
     .inputs-container {
       display: flex;
       justify-content: center;
@@ -62,7 +56,6 @@
       gap: 15px;
       margin-bottom: 20px;
     }
-
     .board {
       display: grid;
       grid-template-columns: repeat(5, 100px);
@@ -70,7 +63,6 @@
       justify-content: center;
       margin-top: 30px;
     }
-
     .cell {
       width: 100px;
       height: 100px;
@@ -84,16 +76,13 @@
       padding: 8px;
       color: black;
     }
-
     .blue { background-color: #007bff; color: white; }
     .red { background-color: #dc3545; color: white; }
     .yellow { background-color: #ffc107; color: black; }
     .black { background-color: #212529; color: white; }
-
     .team-inputs {
       margin-bottom: 20px;
     }
-
     .team-inputs input {
       padding: 10px;
       margin: 5px;
@@ -101,7 +90,6 @@
       font-size: 16px;
       border: none;
     }
-
     #teamNames {
       display: flex;
       justify-content: center;
@@ -112,18 +100,14 @@
   </style>
 </head>
 <body>
-
   <h1>لعبة كود نيمز - لعبة خاصة</h1>
-
   <div class="description-box">
-    أدخل الكلمات حسب اللون. كل كلمة سيتم عرضها مباشرة على اللوحة. يجب أن يكون المجموع 25 كلمة.
+    أدخل الكلمات حسب اللون. يجب أن يكون المجموع <strong>25</strong> كلمة لبدء اللعبة.
   </div>
-
   <div class="team-inputs">
     <input type="text" id="teamBlueName" placeholder="اسم الفريق الأزرق">
     <input type="text" id="teamRedName" placeholder="اسم الفريق الأحمر">
   </div>
-
   <div class="inputs-container">
     <div>
       <label>🟦 الأزرق</label><br>
@@ -252,6 +236,15 @@
     startGameBtn.onclick = () => {
       const blue = blueArea.value.trim().split('\n').filter(Boolean);
       const red = redArea.value.trim().split('\n').filter(Boolean);
+      const yellow = yellowArea.value.trim().split('\n').filter(Boolean);
+      const black = blackArea.value.trim().split('\n').filter(Boolean);
+
+      const totalWords = blue.length + red.length + yellow.length + black.length;
+
+      if (totalWords !== 25) {
+        alert(`🚫 يجب أن يكون مجموع الكلمات 25. الحالي: ${totalWords}`);
+        return;
+      }
 
       let winner = "draw";
       if (blue.length > red.length) winner = "blue";
