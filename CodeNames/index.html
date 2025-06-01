@@ -10,16 +10,27 @@
       padding: 50px;
       background-color: #45818e;
       color: white;
+      direction: rtl;
     }
 
     h1 {
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+    }
+
+    .description-box {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      width: 60%;
+      margin: 0 auto 30px;
+      font-size: 18px;
+      line-height: 1.6;
     }
 
     button {
       font-size: 20px;
       padding: 15px 30px;
-      margin: 15px;
+      margin: 10px;
       border: none;
       border-radius: 12px;
       cursor: pointer;
@@ -35,13 +46,28 @@
       background-color: #28a745;
       color: white;
     }
+
+    #backBtn {
+      background-color: #6c757d;
+      color: white;
+    }
   </style>
 </head>
 <body>
 
-  <h1>لعبة كود نيمز</h1>
+  <h1>🎯 لعبة كود نيمز</h1>
+
+  <div class="description-box">
+    اختر نوع اللعبة التي تريدها:<br>
+    🔹 <strong>إنشاء لعبة خاصة</strong>: أدخل كلماتك بنفسك واختر الألوان.<br>
+    🔹 <strong>لعبة جاهزة</strong>: يتم توليد الكلمات بشكل تلقائي.<br>
+    استمتعوا باللعب مع أصدقائكم!
+  </div>
+
   <button id="customBtn" onclick="location.href='custom.html'">إنشاء لعبة خاصة</button>
   <button id="readyBtn" onclick="location.href='ready.html'">لعبة جاهزة</button>
+  <br>
+  <button id="backBtn" onclick="location.href='../index.html'">🔙 الرجوع للقائمة الرئيسية</button>
 
 </body>
 </html>
