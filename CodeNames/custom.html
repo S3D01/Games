@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>لعبة كود نيمز - خاصة</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 30px;
+      background-color: #45818e;
+      color: white;
+      direction: rtl;
+    }
+
+    h1, h2 {
+      margin-bottom: 20px;
+    }
+
+    .description-box {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      width: 60%;
+      margin: 0 auto 30px;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 12px 25px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #shuffleBtn { background-color: #ffc107; color: black; }
+    #startGameBtn { background-color: #28a745; color: white; }
+
+    textarea {
+      width: 150px;
+      height: 200px;
+      resize: vertical;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+      padding: 10px;
+      font-size: 14px;
+      font-family: monospace;
+      direction: rtl;
+      white-space: pre-wrap;
+      overflow-y: auto;
+    }
+
+    .inputs-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 100px);
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: #fff2cc;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      color: black;
+    }
+
+    .blue { background-color: #007bff; color: white; }
+    .red { background-color: #dc3545; color: white; }
+    .yellow { background-color: #ffc107; color: black; }
+    .black { background-color: #212529; color: white; }
+
+    .team-inputs {
+      margin-bottom: 20px;
+    }
+
+    .team-inputs input {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      font-size: 16px;
+      border: none;
+    }
+
+    #teamNames {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>لعبة كود نيمز - لعبة خاصة</h1>
+
+  <div class="description-box">
+    أدخل الكلمات حسب اللون. كل كلمة سيتم عرضها مباشرة على اللوحة. يجب أن يكون المجموع 25 كلمة.
+  </div>
+
+  <div class="team-inputs">
+    <input type="text" id="teamBlueName" placeholder="اسم الفريق الأزرق">
+    <input type="text" id="teamRedName" placeholder="اسم الفريق الأحمر">
+  </div>
+
+  <div class="inputs-container">
+    <div>
+      <label>🟦 الأزرق</label><br>
+      <textarea id="blueWords" placeholder="كلمة في كل سطر"></textarea>
+    </div>
+    <div>
+      <label>🟥 الأحمر</label><br>
+      <textarea id="redWords" placeholder="كلمة في كل سطر"></textarea>
+    </div>
+    <div>
+      <label>🟨 المحايد</label><br>
+      <textarea id="yellowWords" placeholder="كلمة في كل سطر"></textarea>
+    </div>
+    <div>
+      <label>⬛ القاتل</label><br>
+      <textarea id="blackWords" placeholder="كلمة في كل سطر"></textarea>
+    </div>
+  </div>
+
+  <button id="shuffleBtn">🔀 إعادة ترتيب الكلمات</button>
+  <button id="startGameBtn">🚀 بدء اللعبة</button>
+
+  <div id="teamNames">
+    <div id="blueNameLabel">🟦 الفريق الأزرق</div>
+    <div id="redNameLabel">🟥 الفريق الأحمر</div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <script>
+    const board = document.getElementById("board");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+    const startGameBtn = document.getElementById("startGameBtn");
+
+    const blueArea = document.getElementById("blueWords");
+    const redArea = document.getElementById("redWords");
+    const yellowArea = document.getElementById("yellowWords");
+    const blackArea = document.getElementById("blackWords");
+
+    const teamBlueInput = document.getElementById("teamBlueName");
+    const teamRedInput = document.getElementById("teamRedName");
+    const blueNameLabel = document.getElementById("blueNameLabel");
+    const redNameLabel = document.getElementById("redNameLabel");
+
+    let cells = [];
+
+    function createEmptyBoard() {
+      board.innerHTML = "";
+      cells = [];
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cells.push(cell);
+        board.appendChild(cell);
+      }
+    }
+
+    function updateBoard() {
+      const blue = blueArea.value.trim().split('\n').map(x => x.replace(/^\d+-\s*/, '')).filter(Boolean);
+      const red = redArea.value.trim().split('\n').map(x => x.replace(/^\d+-\s*/, '')).filter(Boolean);
+      const yellow = yellowArea.value.trim().split('\n').map(x => x.replace(/^\d+-\s*/, '')).filter(Boolean);
+      const black = blackArea.value.trim().split('\n').map(x => x.replace(/^\d+-\s*/, '')).filter(Boolean);
+
+      const words = [
+        ...blue.map(w => ({ word: w, color: 'blue' })),
+        ...red.map(w => ({ word: w, color: 'red' })),
+        ...yellow.map(w => ({ word: w, color: 'yellow' })),
+        ...black.map(w => ({ word: w, color: 'black' }))
+      ];
+
+      for (let i = 0; i < 25; i++) {
+        const cell = cells[i];
+        if (words[i]) {
+          cell.textContent = words[i].word;
+          cell.className = `cell ${words[i].color}`;
+        } else {
+          cell.textContent = "";
+          cell.className = "cell";
+        }
+      }
+    }
+
+    function autoNumberLines(textarea) {
+      const lines = textarea.value.split('\n').filter(line => line.trim() !== '');
+      textarea.value = lines.map((line, i) => `${i + 1}- ${line.replace(/^\d+-\s*/, '')}`).join('\n');
+    }
+
+    function updateTeamNames() {
+      blueNameLabel.textContent = `🟦 ${teamBlueInput.value || "الفريق الأزرق"}`;
+      redNameLabel.textContent = `🟥 ${teamRedInput.value || "الفريق الأحمر"}`;
+    }
+
+    [blueArea, redArea, yellowArea, blackArea].forEach(area => {
+      area.addEventListener('input', updateBoard);
+      area.addEventListener('blur', () => autoNumberLines(area));
+    });
+
+    teamBlueInput.addEventListener('input', updateTeamNames);
+    teamRedInput.addEventListener('input', updateTeamNames);
+
+    shuffleBtn.onclick = () => {
+      const content = cells
+        .map(cell => ({
+          word: cell.textContent,
+          color: [...cell.classList].find(cls => ["blue", "red", "yellow", "black"].includes(cls)) || ""
+        }))
+        .filter(item => item.word);
+
+      for (let i = content.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [content[i], content[j]] = [content[j], content[i]];
+      }
+
+      for (let i = 0; i < 25; i++) {
+        const cell = cells[i];
+        if (content[i]) {
+          cell.textContent = content[i].word;
+          cell.className = `cell ${content[i].color}`;
+        } else {
+          cell.textContent = "";
+          cell.className = "cell";
+        }
+      }
+    };
+
+    startGameBtn.onclick = () => {
+      const blue = blueArea.value.trim().split('\n').filter(Boolean);
+      const red = redArea.value.trim().split('\n').filter(Boolean);
+
+      let winner = "draw";
+      if (blue.length > red.length) winner = "blue";
+      else if (red.length > blue.length) winner = "red";
+
+      localStorage.setItem("boardHTML", board.innerHTML);
+      localStorage.setItem("winner", winner);
+      localStorage.setItem("blueName", teamBlueInput.value || "الفريق الأزرق");
+      localStorage.setItem("redName", teamRedInput.value || "الفريق الأحمر");
+
+      window.location.href = "start.html";
+    };
+
+    createEmptyBoard();
+    updateTeamNames();
+  </script>
+
+</body>
+</html>

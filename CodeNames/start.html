@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>لعبة كود نيمز</title>
+  <style>
+    body {
+     direction: rtl;
+      font-family: 'Arial', sans-serif;
+      color: white;
+      text-align: center;
+      padding: 30px;
+      transition: background-color 0.5s ease;
+      background-color: #3b78d9;
+      overflow-x: hidden;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 100px);
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      color: black;
+      background-color: #fff2cc;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .cell.revealed {
+      animation: flipIn 0.5s ease forwards;
+    }
+    @keyframes flipIn {
+      0% { transform: rotateX(90deg); opacity: 0; }
+      100% { transform: rotateX(0deg); opacity: 1; }
+    }
+    .blue { background-color: #007bff !important; color: white; }
+    .red { background-color: #dc3545 !important; color: white; }
+    .yellow { background-color: #ffc107 !important; color: black; }
+    .black { background-color: #212529 !important; color: white; }
+    .confetti {
+      position: fixed;
+      top: -10px;
+      font-size: 24px;
+      animation: fall 3s linear forwards;
+      pointer-events: none;
+    }
+    @keyframes fall {
+      to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+    #turnNotice {
+      font-size: 20px;
+      margin: 10px 0;
+    }
+    button {
+      font-size: 20px;
+      padding: 15px 30px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    select, input[type="text"] {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 6px;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    table th, table td {
+      border: 1px solid white;
+      padding: 10px;
+      text-align: center;
+    }
+    .hidden-after-win {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="turnNotice"></div>
+  <div id="counters" style="display: flex; justify-content: space-between; max-width: 600px; margin: 20px auto;">
+    <table style="width: 150px; background-color: #f8d7da; color: black; border-radius: 8px;">
+      <tr>
+        <th colspan="2">🟥 <span id="redTeamLabel">الفريق الأحمر</span></th>
+      </tr>
+      <tr>
+        <td>المتبقي</td>
+        <td id="redCount" style="color: #555;">0</td>
+      </tr>
+    </table>
+    <table style="width: 150px; background-color: #d1e7fd; color: black; border-radius: 8px;">
+      <tr>
+        <th colspan="2">🟦 <span id="blueTeamLabel">الفريق الأزرق</span></th>
+      </tr>
+      <tr>
+        <td>المتبقي</td>
+        <td id="blueCount" style="color: #555;">0</td>
+      </tr>
+    </table>
+  </div>
+  <div id="controls" style="margin: 20px;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <input type="text" id="guessWord" placeholder="أدخل كلمة التخمين" style="width: 200px;" />
+      <select id="guessCount">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+      </select>
+      <button onclick="makeGuess()">🎯 خمن</button>
+    </div>
+    <div style="margin-top: 15px;">
+      <button onclick="endTurn()">🔁 إنهاء الدور</button>
+    </div>
+  </div>
+  <div class="board" id="board"></div>
+  <div id="postWinActions" style="display:none; margin-top: 30px;">
+    <button onclick="revealAllCards()">👁️‍🗨️ إظهار البطاقات</button>
+    <button onclick="restartGame()">🔄 إعادة اللعب</button>
+  </div>
+
+  <script>
+    const blueName = localStorage.getItem("blueName") || "الفريق الأزرق";
+    const redName = localStorage.getItem("redName") || "الفريق الأحمر";
+    const boardHTML = localStorage.getItem("boardHTML");
+
+    const board = document.getElementById("board");
+    const turnNotice = document.getElementById("turnNotice");
+    const blueCount = document.getElementById("blueCount");
+    const redCount = document.getElementById("redCount");
+
+    document.getElementById("blueTeamLabel").textContent = blueName;
+    document.getElementById("redTeamLabel").textContent = redName;
+
+    let currentTeam = localStorage.getItem("winner") || "blue";
+    let gameOver = false;
+
+    updateTurnNotice();
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = boardHTML;
+    const cells = tempDiv.querySelectorAll(".cell");
+
+    let totalBlue = 0;
+    let totalRed = 0;
+
+    cells.forEach(cell => {
+      const trueColor = ["blue", "red", "yellow", "black"].find(cls => cell.classList.contains(cls)) || "";
+      const word = cell.textContent;
+
+      if (trueColor === "blue") totalBlue++;
+      if (trueColor === "red") totalRed++;
+
+      const newCell = document.createElement("div");
+      newCell.className = "cell";
+      newCell.textContent = word;
+      newCell.dataset.color = trueColor;
+
+      newCell.addEventListener("click", function () {
+        if (gameOver || newCell.classList.contains("revealed")) return;
+
+        newCell.classList.add(trueColor, "revealed");
+
+        if (trueColor === "blue") totalBlue--;
+        if (trueColor === "red") totalRed--;
+        updateCounters();
+
+        if (trueColor === "black") {
+          endGame(currentTeam === "blue" ? redName : blueName);
+          return;
+        }
+
+        if (trueColor !== currentTeam) {
+          currentTeam = currentTeam === "blue" ? "red" : "blue";
+          updateTurnNotice();
+        }
+
+        if (totalBlue === 0 || totalRed === 0) {
+          const winnerName = totalBlue === 0 ? blueName : redName;
+          endGame(winnerName);
+        }
+      });
+
+      board.appendChild(newCell);
+    });
+
+    function updateCounters() {
+      blueCount.textContent = totalBlue;
+      redCount.textContent = totalRed;
+    }
+
+    function updateTurnNotice() {
+      turnNotice.textContent = `الدور على: ${currentTeam === "blue" ? blueName : redName}`;
+      document.body.style.backgroundColor = currentTeam === "blue" ? "#3b78d9" : "#e06666";
+    }
+
+    function endTurn() {
+      if (gameOver) return;
+      currentTeam = currentTeam === "blue" ? "red" : "blue";
+      updateTurnNotice();
+    }
+
+    function makeGuess() {
+      const wordInput = document.getElementById("guessWord");
+      const countSelect = document.getElementById("guessCount");
+      const word = wordInput.value.trim();
+      const count = countSelect.value;
+
+      if (!word) {
+        alert("🚫 الرجاء إدخال كلمة للتخمين.");
+        return;
+      }
+      if (word.includes(" ")) {
+        alert("🚫 يُسمح بكلمة واحدة فقط.");
+        return;
+      }
+
+      alert(`🎯 تخمينك هو: "${word}" بعدد محاولات: ${count}`);
+      wordInput.value = "";
+      countSelect.value = "1";
+    }
+
+    function endGame(winnerName) {
+      gameOver = true;
+      turnNotice.textContent = `🎉 فاز ${winnerName}! مبروك!`;
+      showConfetti();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById("controls").classList.add("hidden-after-win");
+      document.getElementById("postWinActions").style.display = 'block';
+      document.body.style.backgroundColor = "#45818e";
+    }
+
+    function showConfetti() {
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+        confetti.textContent = "🎉";
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + "s";
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    function revealAllCards() {
+      const allCells = document.querySelectorAll('.cell');
+      allCells.forEach(cell => {
+        if (!cell.classList.contains("revealed")) {
+          const color = cell.dataset.color;
+          if (color) cell.classList.add(color, "revealed");
+        }
+      });
+    }
+
+    function restartGame() {
+      location.href = "index.html";
+    }
+
+    updateCounters();
+  </script>
+</body>
+</html>
