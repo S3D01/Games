@@ -1,219 +1,282 @@
 <!DOCTYPE html>
 <html lang="ar">
-<head>
-  <meta charset="UTF-8">
-  <title>لعبة كود نيمز - جاهزة</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      text-align: center;
-      padding: 30px;
-      background-color: #45818e;
-      color: white;
-      direction: rtl;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .inputs {
-      margin-bottom: 20px;
-    }
-    .inputs input {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-      border-radius: 8px;
-      border: none;
-    }
-    .board {
-      display: grid;
-      grid-template-columns: repeat(5, 100px);
-      gap: 20px;
-      justify-content: center;
-      margin-top: 30px;
-    }
-    .cell {
-      width: 100px;
-      height: 100px;
-      background-color: #fff2cc;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      text-align: center;
-      padding: 8px;
-      color: black;
-      position: relative;
-    }
-    .cell input {
-      width: 90%;
-      text-align: center;
-      background: transparent;
-      border: none;
-      color: inherit;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    .blue { background-color: #007bff; color: white; }
-    .red { background-color: #dc3545; color: white; }
-    .yellow { background-color: #ffc107; color: black; }
-    .black { background-color: #212529; color: white; }
-    button {
-      font-size: 16px;
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #shuffleBtn { background-color: #ffc107; color: black; }
-    #newWordsBtn { background-color: #28a745; color: white; }
-    #startGameBtn { background-color: #17a2b8; color: white; margin-top: 20px; }
-    .notice {
-      margin: 20px auto;
-      background-color: rgba(255,255,255,0.1);
-      padding: 15px;
-      border-radius: 10px;
-      width: 70%;
-      font-size: 16px;
-    }
-  </style>
-</head>
-<body>
-  <h1>لعبة كود نيمز - جاهزة</h1>
-  <div class="inputs">
-    <input type="text" id="blueTeam" placeholder="اسم الفريق الأزرق" oninput="updateTeamNames()">
-    <input type="text" id="redTeam" placeholder="اسم الفريق الأحمر" oninput="updateTeamNames()">
-  </div>
-  <div>
-    <button id="shuffleBtn">🔀 إعادة ترتيب</button>
-    <button id="newWordsBtn">🔄 كلمات أخرى</button>
-  </div>
-  <h3 id="teamLabels">🟦 الفريق الأزرق vs 🟥 الفريق الأحمر</h3>
-  <div class="notice">💡 يمكنك تعديل الكلمة بالضغط على وسط المربع، وتغيير اللون بالضغط على الحواف</div>
-  <div class="board" id="board"></div>
-  <button id="startGameBtn">🚀 ابدأ اللعبة</button>
-
-  <script>
-    let allPresets;
-    const board = document.getElementById("board");
-    let currentWinner = "blue";
-    function updateTeamNames() {
-      const blue = document.getElementById("blueTeam").value || "الفريق الأزرق";
-      const red = document.getElementById("redTeam").value || "الفريق الأحمر";
-      document.getElementById("teamLabels").textContent = `🟦 ${blue} vs 🟥 ${red}`;
-    }
-
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+  <head>
+    <meta charset="UTF-8" />
+    <title>لعبة كود نيمز - جاهزة</title>
+    <style>
+      body {
+        background-image: url("Images/DefB.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        font-family: "Arial", sans-serif;
+        text-align: center;
+        padding: 30px;
+        background-color: #45818e;
+        color: white;
+        direction: rtl;
       }
-      return array;
-    }
-
-    function generateBoardFromPreset(preset) {
-      board.innerHTML = "";
-      const words = [
-        ...preset.blue.map(w => ({ word: w, color: 'blue' })),
-        ...preset.red.map(w => ({ word: w, color: 'red' })),
-        ...preset.neutral.map(w => ({ word: w, color: 'yellow' })),
-        ...preset.assassin.map(w => ({ word: w, color: 'black' }))
-      ];
-      shuffleArray(words);
-
-      for (let i = 0; i < 25; i++) {
-        const item = words[i];
-        const cell = document.createElement("div");
-        cell.className = `cell ${item.color}`;
-
-        const input = document.createElement("input");
-        input.value = item.word;
-        input.oninput = () => { item.word = input.value; };
-
-        // فقط عند الضغط على الحواف يتغير اللون
-        cell.addEventListener("click", (e) => {
-          const bounds = cell.getBoundingClientRect();
-          const x = e.clientX - bounds.left;
-          const y = e.clientY - bounds.top;
-          const edgeThreshold = 20;
-
-          const isEdge = x < edgeThreshold || x > (bounds.width - edgeThreshold) ||
-                         y < edgeThreshold || y > (bounds.height - edgeThreshold);
-
-          if (isEdge) {
-            const colors = ["blue", "red", "yellow", "black"];
-            let index = colors.indexOf(item.color);
-            item.color = colors[(index + 1) % colors.length];
-            cell.className = `cell ${item.color}`;
-          }
-        });
-
-        cell.appendChild(input);
-        board.appendChild(cell);
+      h1 {
+        margin-bottom: 20px;
       }
-      const blueCount = preset.blue.length;
+      .inputs {
+        margin-bottom: 20px;
+      }
+      .inputs input {
+        padding: 10px;
+        font-size: 16px;
+        margin: 5px;
+        border-radius: 8px;
+        border: none;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(5, 100px);
+        gap: 20px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+      .cell {
+        width: 100px;
+        height: 100px;
+        background-color: #fff2cc;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        text-align: center;
+        padding: 8px;
+        color: black;
+        position: relative;
+      }
+      .cell input {
+        width: 90%;
+        text-align: center;
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      .blue {
+        background-color: #02afc8 !important;
+        color: white;
+      }
+      .red {
+        background-color: #f26521 !important;
+        color: white;
+      }
+      .yellow {
+        background-color: #ffc107 !important;
+        color: black;
+      }
+      .black {
+        background-color: #212529 !important;
+        color: white;
+      }
+      .cell.blue {
+        box-shadow: 0 0 10px 2px #ace3ea;
+      }
+
+      .cell.red {
+        box-shadow: 0 0 10px 2px #ffb87e;
+      }
+
+      .cell.yellow {
+        box-shadow: 0 0 10px 2px #f7e0c4;
+      }
+
+      .cell.black {
+        box-shadow: 0 0 10px 2px #3f464e;
+      }
+
+      button {
+        font-size: 16px;
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #shuffleBtn {
+        background-color: #ffc107;
+        color: black;
+      }
+      #newWordsBtn {
+        background-color: #28a745;
+        color: white;
+      }
+      #startGameBtn {
+        background-color: #17a2b8;
+        color: white;
+        margin-top: 20px;
+      }
+      .notice {
+        margin: 20px auto;
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        width: 70%;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>لعبة كود نيمز - جاهزة</h1>
+    <div class="inputs">
+      <input
+        type="text"
+        id="blueTeam"
+        placeholder="اسم الفريق الأزرق"
+        oninput="updateTeamNames()"
+      />
+      <input
+        type="text"
+        id="redTeam"
+        placeholder="اسم الفريق الأحمر"
+        oninput="updateTeamNames()"
+      />
+    </div>
+    <div>
+      <button id="shuffleBtn">🔀 إعادة ترتيب</button>
+      <button id="newWordsBtn">🔄 كلمات أخرى</button>
+    </div>
+    <h3 id="teamLabels">🟦 الفريق الأزرق vs 🟥 الفريق الأحمر</h3>
+    <div class="notice">
+      💡 يمكنك تعديل الكلمة بالضغط على وسط المربع، وتغيير اللون بالضغط على
+      الحواف
+    </div>
+    <div class="board" id="board"></div>
+    <button id="startGameBtn">🚀 ابدأ اللعبة</button>
+
+    <script>
+      let allPresets;
+      const board = document.getElementById("board");
+      let currentWinner = "blue";
+      function updateTeamNames() {
+        const blue =
+          document.getElementById("blueTeam").value || "الفريق الأزرق";
+        const red = document.getElementById("redTeam").value || "الفريق الأحمر";
+        document.getElementById(
+          "teamLabels"
+        ).textContent = `🟦 ${blue} vs 🟥 ${red}`;
+      }
+
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      function generateBoardFromPreset(preset) {
+        board.innerHTML = "";
+        const words = [
+          ...preset.blue.map((w) => ({ word: w, color: "blue" })),
+          ...preset.red.map((w) => ({ word: w, color: "red" })),
+          ...preset.neutral.map((w) => ({ word: w, color: "yellow" })),
+          ...preset.assassin.map((w) => ({ word: w, color: "black" })),
+        ];
+        shuffleArray(words);
+
+        for (let i = 0; i < 25; i++) {
+          const item = words[i];
+          const cell = document.createElement("div");
+          cell.className = `cell ${item.color}`;
+
+          const input = document.createElement("input");
+          input.value = item.word;
+          input.oninput = () => {
+            item.word = input.value;
+          };
+
+          // فقط عند الضغط على الحواف يتغير اللون
+          cell.addEventListener("click", (e) => {
+            const bounds = cell.getBoundingClientRect();
+            const x = e.clientX - bounds.left;
+            const y = e.clientY - bounds.top;
+            const edgeThreshold = 20;
+
+            const isEdge =
+              x < edgeThreshold ||
+              x > bounds.width - edgeThreshold ||
+              y < edgeThreshold ||
+              y > bounds.height - edgeThreshold;
+
+            if (isEdge) {
+              const colors = ["blue", "red", "yellow", "black"];
+              let index = colors.indexOf(item.color);
+              item.color = colors[(index + 1) % colors.length];
+              cell.className = `cell ${item.color}`;
+            }
+          });
+
+          cell.appendChild(input);
+          board.appendChild(cell);
+        }
+        const blueCount = preset.blue.length;
         const redCount = preset.red.length;
 
         if (blueCount > redCount) {
-        currentWinner = "blue";
+          currentWinner = "blue";
         } else if (redCount > blueCount) {
-        currentWinner = "red";
+          currentWinner = "red";
         } else {
-        currentWinner = Math.random() < 0.5 ? "blue" : "red"; // اختيار عشوائي في حالة التعادل
+          currentWinner = Math.random() < 0.5 ? "blue" : "red"; // اختيار عشوائي في حالة التعادل
         }
+      }
 
-    }
+      document.getElementById("shuffleBtn").onclick = () => {
+        const cells = [...document.querySelectorAll(".cell")];
+        const shuffled = shuffleArray(cells);
+        board.innerHTML = "";
+        shuffled.forEach((cell) => board.appendChild(cell));
+      };
 
-    document.getElementById("shuffleBtn").onclick = () => {
-      const cells = [...document.querySelectorAll('.cell')];
-      const shuffled = shuffleArray(cells);
-      board.innerHTML = "";
-      shuffled.forEach(cell => board.appendChild(cell));
-    };
-
-    document.getElementById("newWordsBtn").onclick = () => {
-      const keys = Object.keys(allPresets);
-      const randKey = keys[Math.floor(Math.random() * keys.length)];
-      generateBoardFromPreset(allPresets[randKey]);
-    };
-
-    document.getElementById("startGameBtn").onclick = () => {
-  const cells = document.querySelectorAll(".cell");
-  cells.forEach(cell => {
-    const input = cell.querySelector("input");
-    if (input) {
-      const text = document.createTextNode(input.value);
-      cell.innerHTML = ""; // احذف input
-      cell.appendChild(text); // أضف الكلمة كنص عادي
-    }
-  });
-
-  const boardHTML = board.innerHTML;
-  const blueName = document.getElementById("blueTeam").value || "الفريق الأزرق";
-  const redName = document.getElementById("redTeam").value || "الفريق الأحمر";
-
-  localStorage.setItem("boardHTML", boardHTML);
-  localStorage.setItem("blueName", blueName);
-  localStorage.setItem("redName", redName);
-  localStorage.setItem("winner", currentWinner);
-
-  window.location.href = "start.html";
-};
-
-
-    fetch("presets.json")
-      .then(res => res.json())
-      .then(data => {
-        allPresets = data;
+      document.getElementById("newWordsBtn").onclick = () => {
         const keys = Object.keys(allPresets);
         const randKey = keys[Math.floor(Math.random() * keys.length)];
         generateBoardFromPreset(allPresets[randKey]);
-      })
-      .catch(err => {
-        console.error("خطأ في تحميل ملف JSON:", err);
-      });
-  </script>
-</body>
+      };
+
+      document.getElementById("startGameBtn").onclick = () => {
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach((cell) => {
+          const input = cell.querySelector("input");
+          if (input) {
+            const text = document.createTextNode(input.value);
+            cell.innerHTML = ""; // احذف input
+            cell.appendChild(text); // أضف الكلمة كنص عادي
+          }
+        });
+
+        const boardHTML = board.innerHTML;
+        const blueName =
+          document.getElementById("blueTeam").value || "الفريق الأزرق";
+        const redName =
+          document.getElementById("redTeam").value || "الفريق الأحمر";
+
+        localStorage.setItem("boardHTML", boardHTML);
+        localStorage.setItem("blueName", blueName);
+        localStorage.setItem("redName", redName);
+        localStorage.setItem("winner", currentWinner);
+
+        window.location.href = "start.html";
+      };
+
+      fetch("presets.json")
+        .then((res) => res.json())
+        .then((data) => {
+          allPresets = data;
+          const keys = Object.keys(allPresets);
+          const randKey = keys[Math.floor(Math.random() * keys.length)];
+          generateBoardFromPreset(allPresets[randKey]);
+        })
+        .catch((err) => {
+          console.error("خطأ في تحميل ملف JSON:", err);
+        });
+    </script>
+  </body>
 </html>
