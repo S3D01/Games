@@ -1,0 +1,39 @@
+const cards = Array.from(document.querySelectorAll('.card'))
+  .filter(el => el.textContent.trim() !== "")
+  .map(el => ({
+    word: el.textContent.trim(),
+    type: el.classList.contains('red') ? 'red' :
+          el.classList.contains('blue') ? 'blue' :
+          el.classList.contains('black') ? 'assassin' : 'neutral'
+  }));
+
+const gameWords = {
+  red: [],
+  blue: [],
+  neutral: [],
+  assassin: []
+};
+
+cards.forEach(card => {
+  gameWords[card.type].push(card.word);
+});
+
+const finalJson = {
+  "": gameWords
+};
+
+// تنسيق JSON بحيث تكون القوائم في سطر واحد
+let jsonString = JSON.stringify(finalJson, null, 2)
+  .replace(/\[\s+([^\]]+?)\s+\]/gs, (match, content) => {
+    const items = content.trim().split('\n').map(line => line.trim().replace(/^"|"|,$/g, ''));
+    const flat = items.join('", "');
+    return `["${flat}"]`;
+  });
+
+// إزالة أول وآخر قوس وإضافة } واحدة وفاصلة
+jsonString = jsonString.trim();
+jsonString = jsonString.replace(/^\{\s*/, '');
+jsonString = jsonString.replace(/\s*\}$/, '');
+jsonString = jsonString + ',';
+
+console.log(jsonString);
