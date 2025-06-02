@@ -5,6 +5,10 @@
   <title>لعبة كود نيمز - خاصة</title>
   <style>
     body {
+      background-image: url('Images/DefB.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
       font-family: 'Arial', sans-serif;
       text-align: center;
       padding: 30px;
@@ -76,10 +80,26 @@
       padding: 8px;
       color: black;
     }
-    .blue { background-color: #007bff; color: white; }
-    .red { background-color: #dc3545; color: white; }
-    .yellow { background-color: #ffc107; color: black; }
-    .black { background-color: #212529; color: white; }
+    .blue { background-color: #02AFC8 !important; color: white; }
+    .red { background-color: #f26521 !important; color: white; }
+    .yellow { background-color: #ffc107 !important; color: black; }
+    .black { background-color: #212529 !important; color: white; }
+    .cell.blue {
+  box-shadow: 0 0 10px 2px #ACE3EA;
+}
+
+.cell.red {
+  box-shadow: 0 0 10px 2px #ffb87e;
+}
+
+.cell.yellow {
+  box-shadow: 0 0 10px 2px #f7e0c4;
+}
+
+.cell.black {
+  box-shadow: 0 0 10px 2px #3f464e;
+}
+
     .team-inputs {
       margin-bottom: 20px;
     }
@@ -132,6 +152,7 @@
 
   <div id="teamNames">
     <div id="blueNameLabel">🟦 الفريق الأزرق</div>
+    <div >vs</div>
     <div id="redNameLabel">🟥 الفريق الأحمر</div>
   </div>
 
