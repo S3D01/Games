@@ -5,6 +5,10 @@
   <title>لعبة كود نيمز</title>
   <style>
     body {
+        background-image: url('Images/DefB.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
      direction: rtl;
       font-family: 'Arial', sans-serif;
       color: white;
@@ -35,6 +39,9 @@
       background-color: #fff2cc;
       cursor: pointer;
       transition: background-color 0.3s;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 8px 6px rgba(0, 0, 0, 0.2);
     }
     .cell.revealed {
       animation: flipIn 0.5s ease forwards;
@@ -43,10 +50,26 @@
       0% { transform: rotateX(90deg); opacity: 0; }
       100% { transform: rotateX(0deg); opacity: 1; }
     }
-    .blue { background-color: #007bff !important; color: white; }
-    .red { background-color: #dc3545 !important; color: white; }
+    .blue { background-color: #02AFC8 !important; color: white; }
+    .red { background-color: #f26521 !important; color: white; }
     .yellow { background-color: #ffc107 !important; color: black; }
     .black { background-color: #212529 !important; color: white; }
+    .cell.blue {
+  box-shadow: 0 0 10px 2px #ACE3EA;
+}
+
+.cell.red {
+  box-shadow: 0 0 10px 2px #ffb87e;
+}
+
+.cell.yellow {
+  box-shadow: 0 0 10px 2px #f7e0c4;
+}
+
+.cell.black {
+  box-shadow: 0 0 10px 2px #3f464e;
+}
+
     .confetti {
       position: fixed;
       top: -10px;
@@ -57,9 +80,32 @@
     @keyframes fall {
       to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
     }
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(1);
+      animation: ripple-effect 0.6s ease-out;
+      pointer-events: none;
+    }
+    @keyframes ripple-effect {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(20); opacity: 0; }
+    }
     #turnNotice {
-      font-size: 20px;
-      margin: 10px 0;
+        font-size: 32px;
+    margin: 20px auto;
+    padding: 15px 25px;
+    border-radius: 20px;
+    border: 2px solid white;
+    width: fit-content;
+    max-width: 90%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: background-color 0.5s, color 0.5s;
+    background-color: #45818E; /* يمكن تغييره من جافاسكربت */
+    text-align: center;
     }
     button {
       font-size: 20px;
@@ -120,7 +166,7 @@
       <button onclick="makeGuess()">🎯 خمن</button>
     </div>
     <div style="margin-top: 15px;">
-      <button onclick="endTurn()">🔁 إنهاء الدور</button>
+      <button onclick="endTurn(event)">🔁 إنهاء الدور</button>
     </div>
   </div>
   <div class="board" id="board"></div>
@@ -166,10 +212,17 @@
       newCell.textContent = word;
       newCell.dataset.color = trueColor;
 
-      newCell.addEventListener("click", function () {
+      newCell.addEventListener("click", function (e) {
         if (gameOver || newCell.classList.contains("revealed")) return;
 
         newCell.classList.add(trueColor, "revealed");
+
+        const ripple = document.createElement("div");
+        ripple.className = "ripple";
+        ripple.style.left = (e.clientX - newCell.getBoundingClientRect().left) + "px";
+        ripple.style.top = (e.clientY - newCell.getBoundingClientRect().top) + "px";
+        newCell.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
 
         if (trueColor === "blue") totalBlue--;
         if (trueColor === "red") totalRed--;
@@ -201,11 +254,33 @@
 
     function updateTurnNotice() {
       turnNotice.textContent = `الدور على: ${currentTeam === "blue" ? blueName : redName}`;
-      document.body.style.backgroundColor = currentTeam === "blue" ? "#3b78d9" : "#e06666";
+
+    if (currentTeam === "blue") {
+        document.body.style.backgroundColor = "#165370"; // لون خلفي أزرق غامق
+        document.body.style.backgroundImage = "url('Images/BlueB.png')"; // صورة شفافة للفريق الأزرق
+        turnNotice.style.backgroundColor = "#0c6aa6";
+    } else {
+        document.body.style.backgroundColor = "#ab4527"; // لون خلفي أحمر/برتقالي
+        document.body.style.backgroundImage = "url('Images/RedB.png')"; // صورة شفافة للفريق الأحمر
+        turnNotice.style.backgroundColor = "#c1493d";
     }
 
-    function endTurn() {
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundRepeat = "no-repeat";
+    document.body.style.backgroundPosition = "center";
+}
+    
+
+    function endTurn(e) {
       if (gameOver) return;
+
+      const ripple = document.createElement("div");
+      ripple.className = "ripple";
+      ripple.style.left = (e.clientX - document.body.getBoundingClientRect().left) + "px";
+      ripple.style.top = (e.clientY - document.body.getBoundingClientRect().top) + "px";
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+
       currentTeam = currentTeam === "blue" ? "red" : "blue";
       updateTurnNotice();
     }
@@ -237,7 +312,12 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.getElementById("controls").classList.add("hidden-after-win");
       document.getElementById("postWinActions").style.display = 'block';
-      document.body.style.backgroundColor = "#45818e";
+      turnNotice.style.backgroundColor = "#45818E";
+      document.body.style.backgroundColor = "#45818E"; 
+    document.body.style.backgroundImage = "url('Images/DefB.png')";
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundRepeat = "no-repeat";
+    document.body.style.backgroundPosition = "center";
     }
 
     function showConfetti() {
