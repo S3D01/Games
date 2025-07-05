@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تحديد المجموعات</title>
+  <style>
+    body {
+      background-color: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .group-inputs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background-color: #333;
+      padding: 15px;
+      border-radius: 10px;
+      width: 250px;
+    }
+
+    input[type="text"], input[type="color"], input[type="number"] {
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #startBtn {
+      padding: 15px 40px;
+      font-size: 1.3rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 30px;
+      transition: background-color 0.3s ease;
+    }
+
+    #startBtn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>كم عدد المجموعات؟</h1>
+
+  <div class="form-group">
+    <select id="groupCount" onchange="generateGroups()">
+      <option value="2">2 مجموعات</option>
+      <option value="3">3 مجموعات</option>
+      <option value="4">4 مجموعات</option>
+      <option value="5">5 مجموعات</option>
+      <option value="6">6 مجموعات</option>
+      <option value="7">7 مجموعات</option>
+      <option value="8">8 مجموعات</option>
+    </select>
+  </div>
+
+  <form id="groupForm">
+    <div class="group-inputs" id="groupsContainer"></div>
+    <button type="submit" id="startBtn">ابدأ</button>
+  </form>
+
+  <script>
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function generateGroups() {
+      const count = parseInt(document.getElementById('groupCount').value);
+      const container = document.getElementById('groupsContainer');
+      container.innerHTML = '';
+
+      for (let i = 0; i < count; i++) {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'input-group';
+        groupDiv.innerHTML = `
+          <label>اسم المجموعة ${i + 1}:</label>
+          <input type="text" name="name" required placeholder="اسم المجموعة" />
+
+          <label>لون المجموعة:</label>
+          <input type="color" name="color" value="${getRandomColor()}" />
+
+          <label>عدد الخانات:</label>
+          <div class="inline">
+            <input type="number" name="count" required />
+            <span>ريال</span>
+          </div>
+        `;
+        container.appendChild(groupDiv);
+      }
+    }
+
+    document.getElementById('groupForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const names = Array.from(document.querySelectorAll('input[name="name"]')).map(input => input.value);
+      const colors = Array.from(document.querySelectorAll('input[name="color"]')).map(input => input.value);
+      const counts = Array.from(document.querySelectorAll('input[name="count"]')).map(input => input.value);
+
+      const data = {
+        names,
+        colors,
+        counts
+      };
+
+      localStorage.setItem('groups', JSON.stringify(data));
+      window.location.href = 'map.html'; // ← غيره إذا كان اسم صفحة الخريطة مختلف
+    });
+
+    // توليد أولي افتراضي
+    window.onload = () => generateGroups();
+  </script>
+
+</body>
+</html>
