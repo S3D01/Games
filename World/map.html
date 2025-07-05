@@ -133,7 +133,7 @@
         }
   
         .st0, .st1, .st2, .st3, .st4 {
-          fill: #9c2221;
+          fill: transparent;
         }
   
         .st0, .st1, .st3, .st4 {
@@ -1301,41 +1301,38 @@
     item.innerHTML = `
       <div class="group-header">
         <div class="group-name">${name}</div>
-        <button class="select-color-button" title="اختر هذا اللون">اختر</button>
-        <div class="group-color" style="background-color: ${color};"></div>
+        <div class="group-color" style="background-color: ${color};" title="اضغط لاختيار اللون"></div>
       </div>
       <div class="group-money">
-        <input type="number" value="${count}" /> ريال
+        <input type="number" value="${count}"  step="1000"/> ريال
       </div>
     `;
 
     groupList.appendChild(item);
 
-    const selectBtn = item.querySelector(".select-color-button");
-    selectBtn.addEventListener("click", (e) => {
-      selectedColor = getComputedStyle(item.querySelector(".group-color")).backgroundColor;
+    const colorCircle = item.querySelector(".group-color");
+    colorCircle.addEventListener("click", (e) => {
+      selectedColor = getComputedStyle(colorCircle).backgroundColor;
       document.getElementById("currentColorPreview").style.backgroundColor = selectedColor;
       e.stopPropagation();
     });
   });
 
-  const originalFill = "rgb(156, 34, 33)"; // ← هذا هو #9c2221 بصيغة rgb
+  const originalFill = "transparent";
 
-document.querySelectorAll(".clickable-shape").forEach(shape => {
-  shape.addEventListener("click", () => {
-    if (!selectedColor) return;
+  document.querySelectorAll(".clickable-shape").forEach(shape => {
+    shape.addEventListener("click", () => {
+      if (!selectedColor) return;
 
-    const currentColor = getComputedStyle(shape).fill;
+      const currentColor = getComputedStyle(shape).fill;
 
-    if (currentColor === selectedColor) {
-      shape.style.fill = originalFill; // يرجع للون الأصلي
-    } else {
-      shape.style.fill = selectedColor; // يلوّن بلون المجموعة
-    }
+      if (currentColor === selectedColor) {
+        shape.style.cssText = `fill: ${originalFill} !important`;
+      } else {
+        shape.style.cssText = `fill: ${selectedColor} !important`;
+      }
+    });
   });
-});
-
 </script>
-
 </body>
 </html>
