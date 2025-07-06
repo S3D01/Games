@@ -1301,15 +1301,15 @@
     const item = document.createElement("div");
     item.className = "group-item";
 
-    item.innerHTML = `
-      <div class="group-header">
-        <div class="group-name">${name}</div>
-        <div class="group-color" style="background-color: ${color};" title="اضغط لاختيار اللون"></div>
-      </div>
-      <div class="group-money">
-        <input type="number" value="${count}"  step="1000"/> ريال
-      </div>
-    `;
+item.innerHTML = `
+  <div class="group-header">
+    <div class="group-name">${name}</div>
+    <div class="group-color" style="background-color: ${color};" title="اضغط لاختيار اللون"></div>
+  </div>
+  <div class="group-money">
+    <span class="land-count">0</span> أرض
+  </div>
+`;
 
     groupList.appendChild(item);
 
@@ -1324,18 +1324,36 @@
   const originalFill = "transparent";
 
   document.querySelectorAll(".clickable-shape").forEach(shape => {
-    shape.addEventListener("click", () => {
-      if (!selectedColor) return;
+  shape.addEventListener("click", () => {
+    if (!selectedColor) return;
 
-      const currentColor = getComputedStyle(shape).fill;
+    const currentColor = shape.getAttribute("fill") || originalFill;
 
-      if (currentColor === selectedColor) {
-        shape.style.cssText = `fill: ${originalFill} !important`;
-      } else {
-        shape.style.cssText = `fill: ${selectedColor} !important`;
-      }
-    });
+    if (currentColor === selectedColor) {
+      shape.style.cssText = `fill: ${originalFill} !important`;
+    } else {
+      shape.style.cssText = `fill: ${selectedColor} !important`;
+    }
+
+    updateLandCounts(); // ← نحدث العد بعد التلوين
   });
+});
+
+
+  function updateLandCounts() {
+  const items = document.querySelectorAll(".group-item");
+
+  items.forEach((item, index) => {
+    const groupColor = getComputedStyle(item.querySelector(".group-color")).backgroundColor;
+    const count = Array.from(document.querySelectorAll(".clickable-shape")).filter(shape => {
+      const fill = shape.style.fill || shape.getAttribute("fill");
+      return fill === groupColor;
+    }).length;
+
+    item.querySelector(".land-count").textContent = count;
+  });
+}
+
 </script>
 </body>
 </html>
