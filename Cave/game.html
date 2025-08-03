@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لعبة المنجم</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f0f0;
+      background-image: url("Images/back.png");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      text-align: center;
+      padding: 30px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #fff;
+      text-shadow: 1px 1px 3px #000;
+    }
+
+    .screen {
+      margin: 30px auto;
+      width: 300px;
+      height: 300px;
+      background-color: #999999;
+      border: 2px solid #000;
+      box-shadow: 0 0 5px #0000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      overflow: hidden;
+}
+
+
+    .screen img {
+      max-width: 220px;
+    }
+
+    .players {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  border-radius: 10px;
+  width: 180px;
+  min-height: 230px; /* تحديد ارتفاع موحد */
+  box-shadow: 0 0 5px #727171;
+  transition: 0.3s;
+  color: white;
+  cursor: pointer;
+}
+
+
+    .player.active {
+      border: 3px solid #777777;
+      box-shadow: 0 0 10px #777777;
+    }
+
+    .score {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+
+    .actions {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #9999;
+      border: 2px solid black;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    select {
+      margin-top: 8px;
+      font-size: 14px;
+      padding: 5px;
+      border-radius: 6px;
+    }
+
+    #stoneName {
+      font-size: 20px;
+      margin-top: 10px;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    #winnerText {
+      margin-top: 30px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    #endGameButton {
+      margin-top: 60px;
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>لعبة المنجم</h1>
+
+  <div class="screen" id="screen">
+    <img id="stoneImage" src="/Images/screen.png" alt="صورة حجر">
+  </div>
+  <div id="stoneName"></div>
+
+  <div class="actions">
+    <button id="rollButton">اضغط للحصول على رقم</button>
+  </div>
+
+  <div class="players" id="playersContainer"></div>
+
+  <div id="winnerText"></div>
+
+  <button id="endGameButton" onclick="endGame()">إنهاء اللعبة</button>
+
+  <script>
+    const config = JSON.parse(localStorage.getItem("gameConfig"));
+    if (!config) {
+      alert("لم يتم إعداد اللعبة بعد. الرجاء العودة للصفحة الرئيسية.");
+      window.location.href = "start.html";
+    }
+
+    const screen = document.getElementById("screen");
+    const stoneImage = document.getElementById("stoneImage");
+    const stoneName = document.getElementById("stoneName");
+    const rollButton = document.getElementById("rollButton");
+    const playersContainer = document.getElementById("playersContainer");
+    const winnerText = document.getElementById("winnerText");
+
+    let currentPlayer = 0;
+    let scores = new Array(config.groups.length).fill(0);
+    let isRolling = false;
+
+    const stoneTitles = ["فحم", "نحاس", "فضة", "ذهب", "ألماس"];
+
+    config.groups.forEach((group, index) => {
+      const div = document.createElement("div");
+      div.className = "player";
+      if (index === 0) div.classList.add("active");
+      div.style.backgroundColor = group.color;
+      div.onclick = () => setActivePlayer(index);
+
+      div.innerHTML = `
+        <h3>${group.name}</h3>
+        <div class="score" id="score${index}">0</div>
+        <select id="target${index}">
+          ${config.groups.map((g, i) => i !== index ? `<option value="${i}">هاجم ${g.name}</option>` : "").join("")}
+        </select>
+        <button onclick="attack(${index})">هجوم</button>
+      `;
+      playersContainer.appendChild(div);
+    });
+
+    function setActivePlayer(index) {
+      currentPlayer = index;
+      document.querySelectorAll(".player").forEach((p, i) => {
+        p.classList.toggle("active", i === index);
+      });
+    }
+
+    function generateWeightedIndex(probabilities) {
+      const rand = Math.random();
+      let sum = 0;
+      for (let i = 0; i < probabilities.length; i++) {
+        sum += probabilities[i];
+        if (rand <= sum) return i;
+      }
+      return probabilities.length - 1;
+    }
+
+    rollButton.onclick = () => {
+      if (isRolling) return;
+      isRolling = true;
+      rollButton.disabled = true;
+      rollButton.style.backgroundColor = "gray";
+      stoneName.textContent = "";
+      let counter = 0;
+      const imageCount = 5;
+      stoneImage.style.display = "block";
+
+      const animationInterval = setInterval(() => {
+        counter = (counter % imageCount) + 1;
+        stoneImage.src = `images/${counter}.png`;
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(animationInterval);
+        const index = generateWeightedIndex(config.probabilities);
+        const value = config.points[index];
+        scores[currentPlayer] += value;
+
+        stoneImage.src = `images/${index + 1}.png`;
+        document.getElementById(`score${currentPlayer}`).textContent = scores[currentPlayer];
+        stoneName.textContent = `${stoneTitles[index]} - ${value} نقطة`;
+
+        setTimeout(() => {
+          isRolling = false;
+          rollButton.disabled = false;
+          rollButton.style.backgroundColor = "#696968";
+        }, 500);
+      }, 2000);
+    };
+
+    function attack(attackerIndex) {
+      const targetIndex = parseInt(document.getElementById(`target${attackerIndex}`).value);
+      const cost = config.attackCost;
+      const damage = config.damageToTarget;
+
+      if (attackerIndex === targetIndex) {
+        alert("لا يمكنك مهاجمة نفسك!");
+        return;
+      }
+
+      if (scores[attackerIndex] < cost) {
+        alert("لا تملك نقاط كافية للهجوم");
+        return;
+      }
+
+      scores[attackerIndex] -= cost;
+      scores[targetIndex] -= damage;
+
+      document.getElementById(`score${attackerIndex}`).textContent = scores[attackerIndex];
+      document.getElementById(`score${targetIndex}`).textContent = scores[targetIndex];
+    }
+
+    function endGame() {
+      const maxScore = Math.max(...scores);
+      const winnerIndexes = scores
+        .map((score, idx) => score === maxScore ? idx : -1)
+        .filter(idx => idx !== -1);
+
+      if (winnerIndexes.length === 1) {
+        const winnerName = config.groups[winnerIndexes[0]].name;
+        winnerText.textContent = `الفائز: ${winnerName} بـ ${maxScore} نقطة`;
+      } else {
+        const tiedNames = winnerIndexes.map(i => config.groups[i].name).join(" و ");
+        winnerText.textContent = `تعادل بين: ${tiedNames} بـ ${maxScore} نقطة`;
+      }
+    }
+  </script>
+
+</body>
+</html>
