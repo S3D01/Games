@@ -1,110 +1,127 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إجابة اللغز</title>
-
-  <!-- استيراد خط DG Forsha -->
+  <title>خدش الجواب</title>
   <style>
-    @font-face {
-      font-family: 'DGForsha';
-      src: url('fonts/DG-Forsha-Regular.ttf') format('truetype');
-    }
-
     body {
-      font-family: 'DGForsha', Arial, sans-serif;
       background-color: #1d2a47;
       color: white;
-      margin: 0;
-      padding: 20px;
+      font-family: Arial, sans-serif;
       text-align: center;
-      height: 100vh;
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 20px;
-    }
-
-    /* ✅ حجم الصورة متناسب مع الجوال */
-    .logo {
-      width: 30%;
-      max-width: 140px;
-      height: auto;
-      margin-top: 20px;
-      margin-bottom: 10px;
-    }
-
-    .codeword {
-      font-size: 40px;
+      padding: 30px;
     }
 
     h1 {
-      font-size: 22px;
-      margin: 10px 0;
+      margin-bottom: 30px;
     }
 
-    input {
-      font-size: 18px;
-      padding: 12px;
-      width: 80%;
-      max-width: 350px;
-      border: none;
-      border-radius: 30px;
-      text-align: center;
+    #scratch-container {
+      position: relative;
+      width: 300px;
+      height: 100px;
+      margin: auto;
     }
 
-    button {
-      background-color: #515c7d;
-      color: white;
-      font-size: 18px;
-      padding: 10px 25px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #3c4b62;
-    }
-
-    #result {
-      font-size: 20px;
+    #answer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      font-size: 24px;
       font-weight: bold;
-      margin-top: 15px;
+      line-height: 100px;
+      z-index: 1;
+      background-color: transparent;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      border-radius: 10px;
+      background-color: #515c7d;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- ✅ صورة متجاوبة -->
-    <img src="logo.png" alt="رمز الشفرة" class="logo">
+  <h1>ما هو جواب اللغز؟</h1>
 
-    <div class="codeword"></div>
-    <h1>ما هو جواب اللغز؟</h1>
-    <input type="text" id="answer" placeholder="اكتب الجواب هنا">
-    <button onclick="checkAnswer()">إرسال الإجابة</button>
-    <div id="result"></div>
+  <div id="scratch-container">
+    <div id="answer">الإجابة: أزرق</div>
+    <canvas id="scratch"></canvas>
   </div>
 
   <script>
-    function checkAnswer() {
-      const answer = document.getElementById('answer').value.trim().toLowerCase();
-      const resultDiv = document.getElementById('result');
+    const canvas = document.getElementById('scratch');
+    const ctx = canvas.getContext('2d');
 
-      if (answer === "أزرق") {
-        resultDiv.textContent = "إجابة صحيحة!";
+    // ضبط حجم الكانفاس بشكل ديناميكي
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      // غطِّ المنطقة بلون غامق
+      ctx.fillStyle = '#515c7d';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    resizeCanvas(); // أول مرة
+    window.addEventListener("resize", resizeCanvas); // إذا تغيرت الشاشة
+
+    let isDrawing = false;
+
+    function scratch(x, y) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches) {
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top
+        };
       } else {
-        resultDiv.textContent = "إجابة خاطئة. حاول مرة أخرى!";
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
       }
     }
-  </script>
 
-</body>
-</html>
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const pos = getCoords(e);
+      scratch(pos.x, pos.y);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const pos = getCoords(e);
+      scratch(pos.x, pos.y);
+    });
+
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+    // للمس على الجوال
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const pos = getCoords(e);
+      scratch(pos.x, pos.y);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isD
