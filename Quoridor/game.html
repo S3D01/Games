@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>Quoridor — لعبة متعددة اللاعبين مع ترتيب مراكز</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg:#0f0f11; --board:#232323; --cell:#101013; --grid:#3a3a3a;
+  }
+  body{margin:0;background:var(--bg);color:#ddd;font-family:system-ui,Segoe UI,Arial;display:grid;place-items:center;min-height:100vh}
+  .wrap{display:grid;gap:10px;justify-items:center;width:100%}
+  .controls-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;width:min(95vw,1100px)}
+  .panel{display:flex;align-items:center;gap:10px;background:#1a1a1a;border:1px solid #2b2b2b;border-radius:12px;padding:8px 10px;min-width:280px}
+  .label{min-width:120px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .pad{display:grid;grid-template-columns:40px 40px 40px;grid-template-rows:40px 40px 40px;gap:6px}
+  .btn, .wallbtn, .hammerbtn, .backbtn{
+    background:#222;border:1px solid #333;color:#eee;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:16px;height:40px;width:40px
+  }
+  .btn:hover,.wallbtn:hover,.hammerbtn:hover,.backbtn:hover{background:#2b2b2b}
+  .btn[disabled]{opacity:.35;cursor:default}
+  .wallbtn{font-weight:900}
+  .hammerbtn{font-size:18px}
+  .backbtn{font-size:16px}
+  .toolbox{display:flex;gap:6px;align-items:center}
+  canvas{
+    border-radius:12px;background:var(--board);
+    box-shadow:0 8px 24px rgba(0,0,0,.5), inset 0 0 0 2px #1a1a1a;
+    margin:6px auto; display:block; max-width:95vw
+  }
+  .hint{font-size:12px;opacity:.8;text-align:center}
+  .rankbar{font-size:13px;background:#161616;border:1px solid #2b2b2b;padding:8px 10px;border-radius:10px}
+  .winner{color:#a7f3d0}
+  .finished{opacity:.6}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- الصف العلوي من لوحات التحكم -->
+    <div id="topControls" class="controls-row"></div>
+
+    <!-- اللوحة -->
+    <canvas id="board"></canvas>
+    <div class="hint">الأسهم للحركة • ━/┃ لوضع جدار • 🪓 لهدم جدار • ⏪ رجوع خطوة</div>
+    <div id="rankbar" class="rankbar"></div>
+
+    <!-- الصف السفلي من لوحات التحكم -->
+    <div id="bottomControls" class="controls-row"></div>
+  </div>
+
+<script>
+/* ================== تحميل الإعدادات ================== */
+const settings = JSON.parse(localStorage.getItem('quoridorSettings') || '{}');
+// fallback إن لم تُستخدم start.html
+const numTeams = Math.max(2, Math.min(8, settings.numTeams || 2));
+const N = Math.max(7, Math.min(19, settings.boardSize || 9)); // نسمح حتى 19×19 لو رغبت لاحقاً
+// فرق بأسماء/ألوان
+let teams = (settings.teams || Array.from({length:numTeams}, (_,i)=>({
+  id:i+1, name:`الفريق ${i+1}`, color: randomColor(), tag: ''
+}))).slice(0, numTeams);
+
+/* ================== اللوحة والرسم ================== */
+const CELL = 60, PAD = 35, G = 5, WALL_THICK = 10;
+const size = PAD*2 + (N*CELL) - G;
+
+const canvas = document.getElementById('board');
+canvas.width = size; canvas.height = size;
+const ctx = canvas.getContext('2d');
+
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function randomColor(){ return '#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0'); }
+
+function cellRect(r,c){ return [PAD+c*CELL, PAD+r*CELL, CELL-G, CELL-G]; }
+function drawCells(){
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+    const [x,y,w,h] = cellRect(r,c);
+    ctx.fillStyle = '#101013'; ctx.fillRect(x,y,w,h);
+  }
+}
+function drawGrid(){
+  ctx.strokeStyle = '#3a3a3a'; ctx.lineWidth = 2;
+  for(let i=0;i<=N;i++){
+    const x=PAD+i*CELL-G/2, y=PAD+i*CELL-G/2;
+    ctx.beginPath(); ctx.moveTo(x, PAD-G/2); ctx.lineTo(x, PAD+N*CELL-G/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD-G/2, y); ctx.lineTo(PAD+N*CELL-G/2, y); ctx.stroke();
+  }
+}
+function drawPawn(p){
+  const [x,y,w,h] = cellRect(p.r, p.c);
+  const cx=x+w/2, cy=y+h/2, rad=w/3.2;
+  const g=ctx.createRadialGradient(cx-3,cy-3,6,cx,cy,rad);
+  g.addColorStop(0,'#ffffff22'); g.addColorStop(1,p.color);
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#0008'; ctx.lineWidth=2; ctx.stroke();
+  if (p.finished) {
+    // علامة خفيفة للفائزين
+    ctx.fillStyle = '#ffffff20';
+    ctx.beginPath(); ctx.arc(cx,cy,rad+4,0,Math.PI*2); ctx.fill();
+  }
+}
+function drawWalls(){
+  // أفقية
+  for(const w of state.wallsH){
+    ctx.fillStyle = w.color;
+    const x=PAD+w.c*CELL-G/2;
+    const y=PAD+(w.r+1)*CELL-G/2-WALL_THICK/2;
+    ctx.fillRect(x,y,CELL,WALL_THICK);
+  }
+  // عمودية
+  for(const w of state.wallsV){
+    ctx.fillStyle = w.color;
+    const x=PAD+(w.c+1)*CELL-G/2-WALL_THICK/2;
+    const y=PAD+w.r*CELL-G/2;
+    ctx.fillRect(x,y,WALL_THICK,CELL);
+  }
+}
+function redraw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawCells(); drawGrid(); drawWalls();
+  for(const p of state.players) drawPawn(p);
+  updateRankbar();
+}
+
+/* ================== نموذج الحالة ================== */
+const state = {
+  players: [],          // [{id,name,color,tag,r,c,side,goal,history:[],finished:false,rank:null}]
+  wallsH: [], wallsV: [],
+  pendingWall: null,    // {ownerId, orient, color}
+  pendingHammer: null,  // {ownerId}
+  ranks: []             // [{id,name,rank}]
+};
+
+/* ===== توزيع الجهات والأهداف =====
+   ترتيب الجهات: top, bottom, left, right
+   للاعبين 2–4: لاعب واحد في منتصف الجهة لكل جهة مستخدمة.
+   للاعبين 5–8: لاعبان كحد أقصى لكل جهة:
+     - الأول عند الإزاحة 3 (الخانة الرابعة).
+     - الثاني عند الإزاحة N-4.
+*/
+const SIDES = ['top','bottom','left','right'];
+function assignStarts(num, N){
+  const playersMeta = [];
+  const mid = Math.floor(N/2);
+  let idx = 0;
+
+  // كم لاعب لكل جهة (دورتان كحد أقصى)
+  // الجولة الأولى: لاعب واحد لكل جهة
+  // الجولة الثانية: لاعب إضافي لكل جهة (إن تجاوزنا 4 لاعبين)
+  const rounds = num <= 4 ? 1 : 2;
+  for (let round=0; round<rounds; round++){
+    for (const side of SIDES){
+      if (idx >= num) break;
+      let r, c, goal;
+      if (round === 0){ // منتصف الجهة
+        if (side==='top')    { r=0;    c=mid; goal={type:'row', value:N-1}; }
+        if (side==='bottom') { r=N-1;  c=mid; goal={type:'row', value:0}; }
+        if (side==='left')   { r=mid;  c=0;   goal={type:'col', value:N-1}; }
+        if (side==='right')  { r=mid;  c=N-1; goal={type:'col', value:0}; }
+      } else { // الجولة الثانية: الخانة الرابعة من الطرف المقابل على نفس الجهة
+        const off1 = 3;           // الخانة الرابعة (صفرّيًا 3)
+        const off2 = N - 4;       // المقابلة لها
+        if (side==='top')    { r=0;    c=off2; goal={type:'row', value:N-1}; }
+        if (side==='bottom') { r=N-1;  c=off1; goal={type:'row', value:0}; }
+        if (side==='left')   { r=off2; c=0;   goal={type:'col', value:N-1}; }
+        if (side==='right')  { r=off1; c=N-1; goal={type:'col', value:0}; }
+      }
+      playersMeta.push({side, r, c, goal});
+      idx++;
+    }
+  }
+  return playersMeta;
+}
+
+/* ===== تهيئة اللاعبين بحسب الإعدادات ===== */
+const starts = assignStarts(numTeams, N);
+state.players = teams.map((t, i)=>({
+  id: t.id, name: t.name, color: t.color, tag: t.tag || '',
+  r: starts[i].r, c: starts[i].c, side: starts[i].side, goal: starts[i].goal,
+  history: [], finished: false, rank: null
+}));
+
+/* ================== واجهة التحكم الديناميكية ================== */
+const topControls = document.getElementById('topControls');
+const bottomControls = document.getElementById('bottomControls');
+
+// نقسم اللوحات نصفين: النصف الأول أعلى اللوح، النصف الثاني أسفله
+const half = Math.ceil(state.players.length / 2);
+const topList = state.players.slice(0, half);
+const bottomList = state.players.slice(half);
+
+function createPanel(p){
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  panel.id = `panel-${p.id}`;
+
+  const label = document.createElement('div');
+  label.className = 'label';
+  const dot = document.createElement('span');
+  dot.className = 'dot';
+  dot.style.background = p.color;
+  label.appendChild(dot);
+  label.appendChild(document.createTextNode(p.name));
+
+  const pad = document.createElement('div');
+  pad.className = 'pad';
+  pad.innerHTML = `
+    <div></div><button class="btn" data-move="-1,0" data-pid="${p.id}">↑</button><div></div>
+    <button class="btn" data-move="0,1" data-pid="${p.id}">→</button>
+    <button class="btn" disabled>•</button>
+        <button class="btn" data-move="0,-1" data-pid="${p.id}">←</button>
+    <div></div><button class="btn" data-move="1,0" data-pid="${p.id}">↓</button><div></div>
+  `;
+
+  const toolbox = document.createElement('div');
+  toolbox.className = 'toolbox';
+  // أزرار الجدران بلون الفريق
+  const wallH = document.createElement('button');
+  wallH.className = 'wallbtn'; wallH.textContent = '━';
+  wallH.style.background = mixColor(p.color, '#111', 0.3); wallH.style.color = '#fff';
+  wallH.dataset.wall = 'H'; wallH.dataset.pid = p.id;
+
+  const wallV = document.createElement('button');
+  wallV.className = 'wallbtn'; wallV.textContent = '┃';
+  wallV.style.background = mixColor(p.color, '#111', 0.3); wallV.style.color = '#fff';
+  wallV.dataset.wall = 'V'; wallV.dataset.pid = p.id;
+
+  const hammer = document.createElement('button');
+  hammer.className = 'hammerbtn'; hammer.title='هدم جدار'; hammer.textContent='🪓';
+  hammer.dataset.hammer = p.id;
+
+  const back = document.createElement('button');
+  back.className = 'backbtn'; back.title='رجوع خطوة'; back.textContent='⏪';
+  back.dataset.back = p.id;
+
+  toolbox.appendChild(wallH); toolbox.appendChild(wallV);
+  toolbox.appendChild(hammer); toolbox.appendChild(back);
+
+  panel.appendChild(label); panel.appendChild(pad); panel.appendChild(toolbox);
+  return panel;
+}
+
+function mixColor(c1, c2, t){ // t=0..1
+  // color-mix تقريبية
+  function hexToRgb(h){ const n=parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  function rgbToHex(r,g,b){ return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  const a=hexToRgb(c1), b=hexToRgb(c2);
+  const r=Math.round(a[0]*(1-t)+b[0]*t), g=Math.round(a[1]*(1-t)+b[1]*t), bl=Math.round(a[2]*(1-t)+b[2]*t);
+  return rgbToHex(r,g,bl);
+}
+
+topList.forEach(p=> topControls.appendChild(createPanel(p)));
+bottomList.forEach(p=> bottomControls.appendChild(createPanel(p)));
+
+/* ================== منطق الجدران والحركة ================== */
+function inBounds(r,c){ return r>=0 && r<N && c>=0 && c<N; }
+
+function blocked(r,c,nr,nc){
+  // نزول
+  if(nr===r+1 && nc===c) return state.wallsH.some(w=>w.r===r && w.c===c);
+  // صعود
+  if(nr===r-1 && nc===c) return state.wallsH.some(w=>w.r===nr && w.c===c);
+  // يمين
+  if(nc===c+1 && nr===r) return state.wallsV.some(w=>w.r===r && w.c===c);
+  // يسار
+  if(nc===c-1 && nr===r) return state.wallsV.some(w=>w.r===r && w.c===nc);
+  return false;
+}
+
+function getPlayerById(id){ return state.players.find(x=>x.id===id); }
+
+function move(pid, dr, dc){
+  const p = getPlayerById(pid);
+  if (!p || p.finished) return;
+  const nr = p.r + dr, nc = p.c + dc;
+  if (!inBounds(nr,nc)) return;
+
+  // لا يسمح بالدخول فوق لاعب آخر
+  if (state.players.some(q=>!q.finished && q.id!==p.id && q.r===nr && q.c===nc)) return;
+
+  if (blocked(p.r, p.c, nr, nc)) return;
+
+  p.history.push({r:p.r,c:p.c});
+  p.r = nr; p.c = nc;
+
+  checkWin(p);
+  redraw();
+}
+
+function backStep(pid){
+  const p = getPlayerById(pid);
+  if (!p || p.finished) return;
+  if (p.history.length){
+    const last = p.history.pop();
+    p.r = last.r; p.c = last.c;
+    redraw();
+  }
+}
+
+function placeWall(ownerId, orient, r, c){
+  const owner = getPlayerById(ownerId);
+  if (!owner) return;
+  const color = owner.color;
+  if (orient==='H'){
+    if (!state.wallsH.some(u=>u.r===r && u.c===c)) state.wallsH.push({r,c,ownerId,color});
+  } else {
+    if (!state.wallsV.some(u=>u.r===r && u.c===c)) state.wallsV.push({r,c,ownerId,color});
+  }
+  redraw();
+}
+function removeWall(r,c){
+  let i = state.wallsH.findIndex(w=>w.r===r&&w.c===c);
+  if (i>=0){ state.wallsH.splice(i,1); redraw(); return true; }
+  i = state.wallsV.findIndex(w=>w.r===r&&w.c===c);
+  if (i>=0){ state.wallsV.splice(i,1); redraw(); return true; }
+  return false;
+}
+
+/* ================== شرط الفوز وترتيب المراكز ================== */
+function meetsGoal(p){
+  if (p.goal.type==='row') return p.r === p.goal.value;
+  if (p.goal.type==='col') return p.c === p.goal.value;
+  return false;
+}
+function checkWin(p){
+  if (p.finished) return;
+  if (meetsGoal(p)){
+    p.finished = true;
+    p.rank = state.ranks.length + 1;
+    state.ranks.push({id:p.id, name:p.name, rank:p.rank});
+    // تعطيل لوحة التحكم الخاصة به شكليًا
+    const panel = document.getElementById(`panel-${p.id}`);
+    if (panel) panel.classList.add('finished');
+
+    // إن كان المتبقّي لاعب واحد فقط، نعطيه آخر مركز تلقائيًا
+    const remaining = state.players.filter(x=>!x.finished);
+    if (remaining.length === 1){
+      const last = remaining[0];
+      last.finished = true;
+      last.rank = state.ranks.length + 1;
+      state.ranks.push({id:last.id, name:last.name, rank:last.rank});
+      const panel2 = document.getElementById(`panel-${last.id}`);
+      if (panel2) panel2.classList.add('finished');
+    }
+  }
+}
+function updateRankbar(){
+  if (!state.ranks.length){
+    document.getElementById('rankbar').innerHTML = '• لم يفز أحد بعد';
+    return;
+  }
+  const items = state.ranks
+    .slice()
+    .sort((a,b)=>a.rank-b.rank)
+    .map(r=>{
+      const p = getPlayerById(r.id);
+      const color = p ? p.color : '#aaa';
+      const cls = r.rank===1 ? 'winner' : '';
+      return `<span class="${cls}" style="margin-inline:6px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};vertical-align:-1px"></span>
+        ${r.rank}) ${r.name}
+      </span>`;
+    }).join(' ');
+  document.getElementById('rankbar').innerHTML = 'الترتيب: ' + items;
+}
+
+/* ================== أوضاع الأدوات (جدار/مطرقة) ================== */
+state.pendingWall = null; // {ownerId,orient}
+state.pendingHammer = null; // {ownerId}
+
+function prepareWall(ownerId, orient){
+  state.pendingWall = {ownerId, orient};
+  state.pendingHammer = null;
+}
+function prepareHammer(ownerId){
+  state.pendingHammer = {ownerId};
+  state.pendingWall = null;
+}
+
+canvas.addEventListener('click', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const c = Math.floor((x - PAD)/CELL);
+  const r = Math.floor((y - PAD)/CELL);
+  if (r<0 || r>=N || c<0 || c>=N) return;
+
+  if (state.pendingWall){
+    placeWall(state.pendingWall.ownerId, state.pendingWall.orient, r, c);
+    state.pendingWall = null;
+  } else if (state.pendingHammer){
+    if (removeWall(r,c)) state.pendingHammer = null;
+  }
+});
+
+/* ================== ربط الأزرار ================== */
+function bindControls(){
+  // حركة
+  document.querySelectorAll('[data-move]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const [dr,dc] = b.dataset.move.split(',').map(Number);
+      const pid = Number(b.dataset.pid);
+      move(pid, dr, dc);
+    });
+  });
+  // جدران
+  document.querySelectorAll('[data-wall]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      prepareWall(Number(b.dataset.pid), b.dataset.wall);
+    });
+  });
+  // مطرقة
+  document.querySelectorAll('[data-hammer]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      prepareHammer(Number(b.dataset.hammer));
+    });
+  });
+  // رجوع خطوة
+  document.querySelectorAll('[data-back]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      backStep(Number(b.dataset.back));
+    });
+  });
+}
+bindControls();
+
+/* ================== تشغيل أولي ================== */
+redraw();
+</script>
+</body>
+</html>
+

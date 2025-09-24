@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>إعداد لعبة Quoridor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg:#0f0f11; --card:#1b1b1b; --border:#2e2e2e; --accent:#7c3aed;
+  }
+  body{
+    margin:0;background:var(--bg);color:#eaeaea;font-family:system-ui,Segoe UI,Arial;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:10px
+  }
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:20px;width:min(95vw,620px);box-shadow:0 10px 28px rgba(0,0,0,.35)
+  }
+  h1{margin:0 0 16px;font-size:24px;color:var(--accent);text-align:center}
+  label{display:block;margin:.5rem 0 .35rem;font-weight:700}
+  select,input[type="text"],input[type="number"],input[type="color"]{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);
+    background:#242424;color:#eee;font-size:14px
+  }
+  .teams{display:grid;gap:12px;margin-top:12px}
+  .team{
+    border:1px solid var(--border);border-radius:10px;padding:10px;background:#202020
+  }
+  .team .row{display:grid;grid-template-columns:1fr 120px 90px;gap:10px;align-items:center}
+  .colorDot{
+    display:inline-block;width:14px;height:14px;border-radius:50%;margin-inline-start:6px;vertical-align:middle
+  }
+  .muted{font-size:12px;color:#bdbdbd;margin-top:6px;text-align:center}
+  .actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{
+    flex:1;padding:12px;border:none;border-radius:10px;cursor:pointer;font-weight:700;
+    font-size:15px;text-align:center
+  }
+  .primary{background:var(--accent);color:#fff}
+  .secondary{background:#2a2a2a;color:#eee}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>إعداد اللعبة</h1>
+
+    <label for="teamsCount">عدد الفِرَق</label>
+    <select id="teamsCount">
+      <option value="2">فريقان (2)</option>
+      <option value="3">٣ فرق</option>
+      <option value="4">٤ فرق</option>
+      <option value="5">٥ فرق</option>
+      <option value="6">٦ فرق</option>
+      <option value="7">٧ فرق</option>
+      <option value="8">٨ فرق</option>
+    </select>
+
+    <div class="teams" id="teamsBox"></div>
+
+    <label for="boardSize">حجم اللوح</label>
+    <select id="boardSize">
+      <option value="9">9 × 9 (قياسي)</option>
+      <option value="11">11 × 11 (كبير)</option>
+      <option value="13">13 × 13 (أكبر)</option>
+    </select>
+
+    <div class="muted">بعد الإعداد، سيتم حفظ الخيارات والانتقال تلقائياً لصفحة اللعبة.</div>
+
+    <div class="actions">
+      <button class="btn secondary" id="randomize">ألوان عشوائية</button>
+      <button class="btn primary" id="startBtn">ابدأ اللعب</button>
+    </div>
+  </div>
+
+<script>
+const teamsBox = document.getElementById('teamsBox');
+const teamsCountSel = document.getElementById('teamsCount');
+const startBtn = document.getElementById('startBtn');
+const randomizeBtn = document.getElementById('randomize');
+
+function randomColor(){
+  return '#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
+}
+
+function renderTeams(){
+  teamsBox.innerHTML = '';
+  const n = parseInt(teamsCountSel.value);
+  for(let i=1;i<=n;i++){
+    const color = randomColor();
+    const team = document.createElement('div');
+    team.className = 'team';
+    team.innerHTML = `
+      <div class="row">
+        <div>
+          <label>اسم الفريق ${i} <span class="colorDot" id="colorDot${i}" style="background:${color}"></span></label>
+          <input type="text" id="teamName${i}" placeholder="مثال: الصقور" value="الفريق ${i}">
+        </div>
+        <div>
+          <label>لون الفريق</label>
+          <input type="color" id="teamColor${i}" value="${color}">
+        </div>
+        <div>
+          <label>اختصار</label>
+          <input type="text" id="teamTag${i}" placeholder="3 أحرف" maxlength="3">
+        </div>
+      </div>
+    `;
+    teamsBox.appendChild(team);
+
+    // تحديث الدائرة عند تغيير اللون
+    const colorInput = team.querySelector(`#teamColor${i}`);
+    colorInput.addEventListener('input', ()=>{
+      document.getElementById(`colorDot${i}`).style.background = colorInput.value;
+    });
+  }
+}
+
+teamsCountSel.addEventListener('change', renderTeams);
+
+randomizeBtn.addEventListener('click', ()=>{
+  const n = parseInt(teamsCountSel.value);
+  for(let i=1;i<=n;i++){
+    const newColor = randomColor();
+    document.getElementById(`teamColor${i}`).value = newColor;
+    document.getElementById(`colorDot${i}`).style.background = newColor;
+  }
+});
+
+renderTeams();
+
+startBtn.addEventListener('click', ()=>{
+  const numTeams = parseInt(document.getElementById('teamsCount').value);
+  const boardSize = parseInt(document.getElementById('boardSize').value);
+
+  const teams = [];
+  for(let i=1;i<=numTeams;i++){
+    const name = (document.getElementById(`teamName${i}`).value || '').trim();
+    const color = document.getElementById(`teamColor${i}`).value;
+    const tag = (document.getElementById(`teamTag${i}`).value || '').toUpperCase().trim();
+    if(!name){
+      alert(`رجاءً اكتب اسم الفريق ${i}`);
+      return;
+    }
+    teams.push({ id:i, name, color, tag });
+  }
+
+  const settings = { mode:'teams', numTeams, teams, boardSize };
+  localStorage.setItem('quoridorSettings', JSON.stringify(settings));
+  window.location.href = 'game.html';
+});
+</script>
+</body>
+</html>
