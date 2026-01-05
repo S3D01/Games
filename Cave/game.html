@@ -204,7 +204,7 @@
 
       const animationInterval = setInterval(() => {
         counter = (counter % imageCount) + 1;
-        stoneImage.src = `images/${counter}.png`;
+        stoneImage.src = `Images/${counter}.png`;
       }, 100);
 
       setTimeout(() => {
@@ -213,7 +213,7 @@
         const value = config.points[index];
         scores[currentPlayer] += value;
 
-        stoneImage.src = `images/${index + 1}.png`;
+        stoneImage.src = `Images/${index + 1}.png`;
         document.getElementById(`score${currentPlayer}`).textContent = scores[currentPlayer];
         stoneName.textContent = `${stoneTitles[index]} - ${value} نقطة`;
 
