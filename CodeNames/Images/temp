@@ -1,1 +1,45 @@
+const colorMap = {
+  'rgb(61, 209, 238)': 'blue',
+  'rgb(255, 145, 89)': 'red',
+  'rgb(255, 214, 176)': 'neutral',
+  'rgb(140, 141, 141)': 'assassin'
+};
 
+const elements = Array.from(document.querySelectorAll('*'));
+
+const cardCandidates = elements.filter(el => {
+  const rect = el.getBoundingClientRect();
+  const style = getComputedStyle(el);
+
+  return (
+    rect.width > 100 &&
+    rect.height > 100 &&
+    rect.width < 250 &&
+    rect.height < 250 &&
+    colorMap[style.backgroundColor]
+  );
+});
+
+const realCards = cardCandidates.filter(el =>
+  !cardCandidates.some(parent => parent !== el && parent.contains(el))
+);
+
+realCards.sort((a, b) => {
+  const rectA = a.getBoundingClientRect();
+  const rectB = b.getBoundingClientRect();
+
+  if (Math.abs(rectA.top - rectB.top) > 10) {
+    return rectA.top - rectB.top;
+  }
+  return rectA.left - rectB.left;
+});
+
+const result = realCards.map(el => {
+  const rawText = el.innerText.trim();
+  const word = rawText.split('\n')[0]; // 🧼 إزالة التكرار
+  const color = colorMap[getComputedStyle(el).backgroundColor];
+
+  return { word, color };
+});
+
+console.log(JSON.stringify(result, null, 2));
