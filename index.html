@@ -1,23 +1,363 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
-  <title>Moved</title>
-  <html lang="en">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=https://nzal.games">
-  <link rel="canonical" href="https://nzal.games">
+  <title>تم نقل الصفحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #f5c842;
+      --dark: #0a0a12;
+      --mid: #12121e;
+      --accent: #ff6b35;
+      --text: #e8e8f0;
+    }
+
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animated starfield background */
+    .stars {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--dur) ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.1; transform: scale(0.8); }
+      to   { opacity: 0.9; transform: scale(1.2); }
+    }
+
+    /* Glowing orb behind card */
+    .orb {
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245,200,66,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 4s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50%       { transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    /* Card */
+    .card {
+      position: relative;
+      z-index: 10;
+      background: linear-gradient(145deg, #1a1a2e, #0f0f1f);
+      border: 1px solid rgba(245,200,66,0.2);
+      border-radius: 24px;
+      padding: 0;
+      max-width: 480px;
+      width: 90%;
+      box-shadow:
+        0 0 60px rgba(245,200,66,0.08),
+        0 20px 80px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      animation: cardIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(40px) scale(0.96);
+      overflow: hidden;
+    }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Image area */
+    .img-wrapper {
+      width: 100%;
+      height: 220px;
+      overflow: hidden;
+      position: relative;
+    }
+    .img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .img-wrapper::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(to top, #0f0f1f, transparent);
+    }
+    .card:hover .img-wrapper img {
+      transform: scale(1.04);
+    }
+
+    /* Body */
+    .card-body {
+      padding: 28px 32px 32px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(245,200,66,0.12);
+      border: 1px solid rgba(245,200,66,0.3);
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1.4;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: rgba(232,232,240,0.55);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    /* New URL display */
+    .url-chip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.25);
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin-bottom: 26px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .url-chip .icon { font-size: 1.2rem; }
+
+    /* CTA Button */
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--gold) 0%, #e8a020 100%);
+      color: #0a0a0a;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 900;
+      padding: 15px 40px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 20px rgba(245,200,66,0.3), 0 0 0 0 rgba(245,200,66,0.4);
+      width: 100%;
+      text-align: center;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.4s ease;
+    }
+    .btn:hover::before { left: 100%; }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(245,200,66,0.45), 0 0 0 4px rgba(245,200,66,0.15);
+    }
+    .btn:active { transform: translateY(0); }
+
+    /* Divider line */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(245,200,66,0.15), transparent);
+      margin: 24px 0;
+    }
+
+    /* Footer note */
+    .footer-note {
+      font-size: 0.78rem;
+      color: rgba(232,232,240,0.3);
+    }
+
+    /* Overlay for transition */
+    .transition-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .transition-overlay.go {
+      animation: fadeOut 0.5s ease forwards;
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    /* Page out animation */
+    @keyframes pageOut {
+      to { opacity: 0; transform: scale(0.95) translateY(-20px); }
+    }
+    .card.leaving {
+      animation: pageOut 0.4s ease forwards;
+    }
+
+    /* Redirect flash */
+    @keyframes flashIn {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .redirect-flash {
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      z-index: 998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .redirect-flash.active {
+      pointer-events: all;
+      animation: flashIn 0.3s ease forwards;
+    }
+    .redirect-flash .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(245,200,66,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <h2>تم نقل الموقع</h2>
-  <p>سيتم تحويلك تلقائياً...</p>
-  <p>
-    إذا لم يتم التحويل اضغط هنا:
-    <a href="https://nzal.games">nzal.games</a>
-  </p>
+
+  <!-- Starfield -->
+  <div class="stars" id="stars"></div>
+  <div class="orb"></div>
+
+  <!-- Card -->
+  <div class="card" id="card">
+    <!-- ضع صورتك هنا — غيّر الـ src -->
+    <div class="img-wrapper">
+      <img
+        src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80"
+        alt="صورة الموقع"
+        id="heroImg"
+      />
+    </div>
+
+    <div class="card-body">
+      <div class="badge">إشعار مهم</div>
+      <h1>تم نقل الصفحة 🎮</h1>
+      <p class="subtitle">
+        انتقلنا إلى عنوان جديد!<br>
+        ستجد كل المحتوى والألعاب في موقعنا الجديد
+      </p>
+
+      <div class="url-chip">
+        <span class="icon">🔗</span>
+        <span>nzal.games</span>
+      </div>
+
+      <a href="https://nzal.games" class="btn" id="goBtn" onclick="handleClick(event)">
+        انتقل إلى الموقع الجديد ←
+      </a>
+
+      <div class="divider"></div>
+      <p class="footer-note">سيتم توجيهك تلقائياً خلال ثوانٍ...</p>
+    </div>
+  </div>
+
+  <!-- Redirect overlay -->
+  <div class="redirect-flash" id="flash">
+    <div class="spinner"></div>
+  </div>
 
   <script>
-    window.location.replace("https://nzal.games");
+    // -------- Starfield --------
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 120; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.5 + 0.5;
+      s.style.cssText = `
+        width:${size}px; height:${size}px;
+        top:${Math.random()*100}%; left:${Math.random()*100}%;
+        --dur:${(Math.random()*3+2).toFixed(1)}s;
+        animation-delay:${(Math.random()*4).toFixed(1)}s;
+      `;
+      starsEl.appendChild(s);
+    }
+
+    // -------- Auto redirect after 7s --------
+    let countdown = 7;
+    const note = document.querySelector('.footer-note');
+    const timer = setInterval(() => {
+      countdown--;
+      if (countdown > 0) {
+        note.textContent = `سيتم توجيهك تلقائياً خلال ${countdown} ثوانٍ...`;
+      } else {
+        clearInterval(timer);
+        doRedirect();
+      }
+    }, 1000);
+
+    // -------- Click handler --------
+    function handleClick(e) {
+      e.preventDefault();
+      clearInterval(timer);
+      doRedirect();
+    }
+
+    function doRedirect() {
+      const card = document.getElementById('card');
+      const flash = document.getElementById('flash');
+      card.classList.add('leaving');
+      flash.classList.add('active');
+      setTimeout(() => {
+        window.location.href = 'https://nzal.games';
+      }, 700);
+    }
   </script>
 </body>
 </html>
